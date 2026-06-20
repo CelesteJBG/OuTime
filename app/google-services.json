@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "114232630820",
+    "project_id": "outime-45fd2",
+    "storage_bucket": "outime-45fd2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:114232630820:android:761aeda173293105b682b1",
+        "android_client_info": {
+          "package_name": "com.outime.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKFqoHRcyThX0707g1c4dE4gso_Goajbc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
