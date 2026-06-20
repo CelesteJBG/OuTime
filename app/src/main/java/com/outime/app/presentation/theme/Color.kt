@@ -1,4 +1,4 @@
-package com.outime.app.ui.theme
+package com.outime.app.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 
