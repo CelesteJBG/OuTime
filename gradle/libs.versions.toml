@@ -12,8 +12,10 @@ navigationCompose = "2.9.3"
 googleServices = "4.4.3"
 firebaseBom = "34.2.0"
 coroutinesPlayServices = "1.10.2"
+lifecycleViewmodelCompose = "2.10.0"
 #hilt = "2.57"
 #hiltNavigationCompose = "1.2.0"
+
 
 
 [libraries]
@@ -38,6 +40,7 @@ firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.r
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutinesPlayServices" }
+androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
