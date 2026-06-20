@@ -11,6 +11,7 @@ composeBom = "2024.09.00"
 navigationCompose = "2.9.3"
 googleServices = "4.4.3"
 firebaseBom = "34.2.0"
+coroutinesPlayServices = "1.10.2"
 #hilt = "2.57"
 #hiltNavigationCompose = "1.2.0"
 
@@ -36,6 +37,7 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutinesPlayServices" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
