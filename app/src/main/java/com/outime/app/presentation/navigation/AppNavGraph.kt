@@ -10,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.outime.app.presentation.screens.BusinessHomeScreen
+import com.outime.app.presentation.screens.ClientHomeScreen
 import com.outime.app.presentation.screens.LoginScreen
 import com.outime.app.presentation.screens.RegisterScreen
 import com.outime.app.presentation.screens.SplashScreen
@@ -46,8 +48,15 @@ fun AppNavGraph() {
                     }
                 },
 
-                onNavigateToHome = {
+                onNavigateToClientHome = {
                     navController.navigate(Routes.CLIENT_HOME){
+                        popUpTo(Routes.SPLASH){
+                            inclusive = true
+                        }
+                    }
+                },
+                onNavigateToBusinessHome = {
+                    navController.navigate(Routes.BUSINESS_HOME){
                         popUpTo(Routes.SPLASH){
                             inclusive = true
                         }
@@ -69,11 +78,11 @@ fun AppNavGraph() {
         }
 
         composable (Routes.CLIENT_HOME){
-            HomeScreen()
+            ClientHomeScreen()
         }
 
         composable (Routes.BUSINESS_HOME){
-            HomeScreen()
+            BusinessHomeScreen()
         }
     }
 }

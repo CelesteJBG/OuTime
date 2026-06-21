@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.outime.app.domain.model.User
 
 class AuthViewModel(
     private val authRepository: AuthRepository
@@ -95,5 +96,10 @@ class AuthViewModel(
         return authRepository.getCurrentUserId()
     }
 
+    suspend fun getCurrentUser(): User?{
+        return authRepository.getCurrentUser()
+    }
+
+  
 
 }
