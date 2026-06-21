@@ -30,7 +30,7 @@ fun AppNavGraph() {
 
     NavHost(
         navController = navController,
-        startDestination = Routes.REGISTER
+        startDestination = Routes.LOGIN
     ) {
 
         composable(Routes.SPLASH) {
@@ -38,7 +38,9 @@ fun AppNavGraph() {
         }
 
         composable(Routes.LOGIN) {
-            LoginScreen()
+            LoginScreen(
+                authViewModel = authViewModel
+            )
         }
 
         composable(Routes.REGISTER) {
