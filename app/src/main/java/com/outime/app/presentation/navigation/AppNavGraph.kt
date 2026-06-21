@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.outime.app.presentation.screens.LoginScreen
 import com.outime.app.presentation.screens.RegisterScreen
 import com.outime.app.presentation.screens.SplashScreen
+import com.outime.app.presentation.screens.HomeScreen
 
 @Composable
 fun AppNavGraph() {
@@ -30,11 +31,29 @@ fun AppNavGraph() {
 
     NavHost(
         navController = navController,
-        startDestination = Routes.LOGIN
+        startDestination = Routes.SPLASH
     ) {
 
         composable(Routes.SPLASH) {
-            SplashScreen()
+            SplashScreen(
+                authViewModel = authViewModel,
+
+                onNavigateToLogin = {
+                    navController.navigate(Routes.LOGIN){
+                        popUpTo(Routes.SPLASH){
+                            inclusive = true
+                        }
+                    }
+                },
+
+                onNavigateToHome = {
+                    navController.navigate(Routes.CLIENT_HOME){
+                        popUpTo(Routes.SPLASH){
+                            inclusive = true
+                        }
+                    }
+                }
+            )
         }
 
         composable(Routes.LOGIN) {
@@ -47,6 +66,14 @@ fun AppNavGraph() {
             RegisterScreen(
                 authViewModel = authViewModel
             )
+        }
+
+        composable (Routes.CLIENT_HOME){
+            HomeScreen()
+        }
+
+        composable (Routes.BUSINESS_HOME){
+            HomeScreen()
         }
     }
 }

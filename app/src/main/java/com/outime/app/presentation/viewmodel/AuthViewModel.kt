@@ -83,7 +83,17 @@ class AuthViewModel(
         _uiState.value = AuthUiState()
     }
 
+    fun isUserLoggedIn(): Boolean{
+        return authRepository.getCurrentUserId() != null
+    }
+
     fun resetState() {
         _uiState.value = AuthUiState()
     }
+
+    fun currentUserId(): String?{
+        return authRepository.getCurrentUserId()
+    }
+
+
 }
