@@ -15,13 +15,21 @@ import com.outime.app.presentation.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    onLoginSuccess:() -> Unit
 ) {
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     val uiState by authViewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            onLoginSuccess()
+            authViewModel.resetState()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -58,7 +66,7 @@ fun LoginScreen(
         }
 
         if (uiState.isLoading) {
-            Text("Cargando...")
+            Text("Iniciando sesión...")
         }
 
         uiState.error?.let {

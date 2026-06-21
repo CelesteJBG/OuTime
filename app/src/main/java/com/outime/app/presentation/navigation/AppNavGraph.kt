@@ -7,6 +7,9 @@ import com.outime.app.presentation.viewmodel.AuthViewModel
 import com.outime.app.presentation.viewmodel.AuthViewModelFactory
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.window.Popup
+import androidx.navigation.PopUpToBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -67,7 +70,14 @@ fun AppNavGraph() {
 
         composable(Routes.LOGIN) {
             LoginScreen(
-                authViewModel = authViewModel
+                authViewModel = authViewModel,
+                onLoginSuccess = {
+                    navController.navigate(Routes.SPLASH){
+                        popUpTo(Routes.LOGIN){
+                            inclusive=true
+                        }
+                    }
+                }
             )
         }
 
@@ -82,7 +92,14 @@ fun AppNavGraph() {
         }
 
         composable (Routes.BUSINESS_HOME){
-            BusinessHomeScreen()
+            BusinessHomeScreen(
+                authViewModel = authViewModel,
+                onLogout = {
+                    navController.navigate(Routes.LOGIN){
+                        popUpTo(0)
+                    }
+                }
+            )
         }
     }
 }
