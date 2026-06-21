@@ -5,6 +5,6 @@ data class Service(
     val businessId: String = "",
     val name: String = "",
     val description: String = "",
-    val duration: Int = 0,
+    val durationMinutes: Int = 30,
     val price: Double = 0.0
 )
