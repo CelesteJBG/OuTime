@@ -7,4 +7,6 @@ object Routes {
 
     const val CLIENT_HOME = "client_home"
     const val BUSINESS_HOME = "business_home"
+
+    const val CREATE_SERVICE = "create_service"
 }
