@@ -8,15 +8,19 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.outime.app.data.repository.AuthRepositoryImpl
+import com.outime.app.data.repository.BusinessRepositoryImpl
 import com.outime.app.data.repository.ServiceRepositoryImpl
 import com.outime.app.presentation.screens.BusinessHomeScreen
 import com.outime.app.presentation.screens.ClientHomeScreen
+import com.outime.app.presentation.screens.CreateBusinessScreen
 import com.outime.app.presentation.screens.CreateServiceScreen
 import com.outime.app.presentation.screens.LoginScreen
 import com.outime.app.presentation.screens.RegisterScreen
 import com.outime.app.presentation.screens.SplashScreen
 import com.outime.app.presentation.viewmodel.AuthViewModel
 import com.outime.app.presentation.viewmodel.AuthViewModelFactory
+import com.outime.app.presentation.viewmodel.BusinessViewModel
+import com.outime.app.presentation.viewmodel.BusinessViewModelFactory
 import com.outime.app.presentation.viewmodel.ServiceViewModel
 import com.outime.app.presentation.viewmodel.ServiceViewModelFactory
 
@@ -42,6 +46,14 @@ fun AppNavGraph() {
         factory = ServiceViewModelFactory(serviceRepository)
     )
 
+    val businessRepository = BusinessRepositoryImpl(
+        firestore = FirebaseFirestore.getInstance()
+    )
+
+    val businessViewModel: BusinessViewModel = viewModel(
+        factory = BusinessViewModelFactory(businessRepository)
+    )
+
     NavHost(
         navController = navController,
         startDestination = Routes.SPLASH
@@ -50,28 +62,29 @@ fun AppNavGraph() {
         composable(Routes.SPLASH) {
             SplashScreen(
                 authViewModel = authViewModel,
+                businessViewModel = businessViewModel,
 
                 onNavigateToLogin = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.SPLASH) {
-                            inclusive = true
-                        }
+                        popUpTo(Routes.SPLASH) { inclusive = true }
                     }
                 },
 
                 onNavigateToClientHome = {
                     navController.navigate(Routes.CLIENT_HOME) {
-                        popUpTo(Routes.SPLASH) {
-                            inclusive = true
-                        }
+                        popUpTo(Routes.SPLASH) { inclusive = true }
                     }
                 },
 
                 onNavigateToBusinessHome = {
                     navController.navigate(Routes.BUSINESS_HOME) {
-                        popUpTo(Routes.SPLASH) {
-                            inclusive = true
-                        }
+                        popUpTo(Routes.SPLASH) { inclusive = true }
+                    }
+                },
+
+                onNavigateToCreateBusiness = {
+                    navController.navigate(Routes.CREATE_BUSINESS) {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
                     }
                 }
             )
@@ -101,15 +114,30 @@ fun AppNavGraph() {
         }
 
         composable(Routes.BUSINESS_HOME) {
+
             BusinessHomeScreen(
                 authViewModel = authViewModel,
                 serviceViewModel = serviceViewModel,
+                businessViewModel = businessViewModel,
                 onNavigateToCreateService = {
                     navController.navigate(Routes.CREATE_SERVICE)
                 },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0)
+                    }
+                }
+            )
+        }
+
+        composable(Routes.CREATE_BUSINESS) {
+            val ownerId = authViewModel.currentUserId() ?: ""
+            CreateBusinessScreen(
+                businessViewModel = businessViewModel,
+                ownerId = ownerId,
+                onBusinessCreated = {
+                    navController.navigate(Routes.BUSINESS_HOME) {
+                        popUpTo(Routes.CREATE_BUSINESS) { inclusive = true }
                     }
                 }
             )

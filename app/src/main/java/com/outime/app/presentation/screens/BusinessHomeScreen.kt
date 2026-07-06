@@ -18,36 +18,29 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.outime.app.domain.model.User
 import com.outime.app.presentation.viewmodel.AuthViewModel
+import com.outime.app.presentation.viewmodel.BusinessViewModel
 import com.outime.app.presentation.viewmodel.ServiceViewModel
 
 @Composable
 fun BusinessHomeScreen(
     authViewModel: AuthViewModel,
     serviceViewModel: ServiceViewModel,
+    businessViewModel: BusinessViewModel,
     onNavigateToCreateService: () -> Unit,
     onLogout: () -> Unit
 ) {
-    val uiState by serviceViewModel.uiState.collectAsState()
+    val serviceUiState by serviceViewModel.uiState.collectAsState()
+    val businessUiState by businessViewModel.uiState.collectAsState()
 
-    var user by remember { mutableStateOf<User?>(null) }
-
+    val business = businessUiState.business
     val businessId = authViewModel.currentUserId() ?: ""
-
-    // Carga inicial del usuario
-    LaunchedEffect(Unit) {
-        user = authViewModel.getCurrentUser()
-    }
 
     // Carga inicial de servicios
     LaunchedEffect(businessId) {
@@ -57,7 +50,6 @@ fun BusinessHomeScreen(
     }
 
     // Recarga la lista cada vez que la pantalla vuelve a estar en RESUMED
-    // (por ejemplo, al volver desde CreateServiceScreen)
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -78,9 +70,11 @@ fun BusinessHomeScreen(
     ) {
         Text("Business Home")
 
-        Text("Nombre: ${user?.name}")
-        Text("Email: ${user?.email}")
-        Text("Rol: ${user?.role}")
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text("Negocio: ${business?.name ?: "-"}")
+        Text("Descripción: ${business?.description ?: "-"}")
+        Text("Categoría: ${business?.category ?: "-"}")
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -112,13 +106,13 @@ fun BusinessHomeScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        if (uiState.isLoading) {
+        if (serviceUiState.isLoading) {
             CircularProgressIndicator()
-        } else if (uiState.services.isEmpty()) {
+        } else if (serviceUiState.services.isEmpty()) {
             Text("No tienes servicios creados todavía.")
         } else {
             LazyColumn {
-                items(uiState.services) { service ->
+                items(serviceUiState.services) { service ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
