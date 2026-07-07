@@ -75,4 +75,17 @@ class BusinessRepositoryImpl(
     } catch (e: Exception) {
         Result.failure(e)
     }
+
+    override suspend fun getAllBusinesses(): Result<List<Business>> = try {
+        val snapshot = firestore
+            .collection(BUSINESSES_COLLECTION)
+            .get()
+            .await()
+
+        val businesses = snapshot.toObjects(Business::class.java)
+
+        Result.success(businesses)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 }

@@ -11,4 +11,6 @@ interface BusinessRepository {
     suspend fun getBusinessById(businessId: String): Result<Business?>
 
     suspend fun updateBusiness(business: Business): Result<Unit>
+
+    suspend fun getAllBusinesses(): Result<List<Business>>
 }

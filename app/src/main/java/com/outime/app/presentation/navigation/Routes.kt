@@ -10,4 +10,8 @@ object Routes {
 
     const val CREATE_SERVICE = "create_service"
     const val CREATE_BUSINESS = "create_business"
+
+    const val BUSINESS_DETAIL = "business_detail/{businessId}"
+
+    fun businessDetail(businessId: String) = "business_detail/$businessId"
 }
