@@ -29,10 +29,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.outime.app.domain.model.Service
 import com.outime.app.presentation.viewmodel.BusinessCatalogViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,9 +45,12 @@ fun BusinessDetailScreen(
     businessId: String,
     businessCatalogViewModel: BusinessCatalogViewModel,
     onNavigateBack: () -> Unit,
-    onReserveClick: () -> Unit
+    onReserveClick: (serviceId: String, serviceName: String) -> Unit
 ) {
     val uiState by businessCatalogViewModel.uiState.collectAsState()
+
+    // Servicio seleccionado por el usuario
+    var selectedService by remember { mutableStateOf<Service?>(null) }
 
     LaunchedEffect(businessId) {
         businessCatalogViewModel.loadBusinessDetail(businessId)
@@ -152,12 +159,21 @@ fun BusinessDetailScreen(
                         }
                     } else {
                         items(uiState.selectedServices) { service ->
+                            val isSelected = selectedService?.id == service.id
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                                elevation = CardDefaults.cardElevation(
+                                    defaultElevation = if (isSelected) 4.dp else 1.dp
+                                ),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                )
+                                    containerColor = if (isSelected)
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    else
+                                        MaterialTheme.colorScheme.surfaceVariant
+                                ),
+                                onClick = {
+                                    selectedService = if (isSelected) null else service
+                                }
                             ) {
                                 Column(
                                     modifier = Modifier
@@ -202,10 +218,19 @@ fun BusinessDetailScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Button(
-                            onClick = onReserveClick,
-                            modifier = Modifier.fillMaxWidth()
+                            onClick = {
+                                val service = selectedService ?: return@Button
+                                onReserveClick(service.id, service.name)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = selectedService != null
                         ) {
-                            Text(text = "Reservar cita")
+                            Text(
+                                text = if (selectedService != null)
+                                    "Reservar: ${selectedService!!.name}"
+                                else
+                                    "Selecciona un servicio"
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))

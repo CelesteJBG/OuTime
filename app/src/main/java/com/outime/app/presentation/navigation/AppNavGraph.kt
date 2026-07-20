@@ -9,9 +9,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.outime.app.data.repository.AppointmentRepositoryImpl
 import com.outime.app.data.repository.AuthRepositoryImpl
 import com.outime.app.data.repository.BusinessRepositoryImpl
 import com.outime.app.data.repository.ServiceRepositoryImpl
+import com.outime.app.presentation.screens.BookingScreen
 import com.outime.app.presentation.screens.BusinessDetailScreen
 import com.outime.app.presentation.screens.BusinessHomeScreen
 import com.outime.app.presentation.screens.ClientHomeScreen
@@ -20,6 +22,8 @@ import com.outime.app.presentation.screens.CreateServiceScreen
 import com.outime.app.presentation.screens.LoginScreen
 import com.outime.app.presentation.screens.RegisterScreen
 import com.outime.app.presentation.screens.SplashScreen
+import com.outime.app.presentation.viewmodel.AppointmentViewModel
+import com.outime.app.presentation.viewmodel.AppointmentViewModelFactory
 import com.outime.app.presentation.viewmodel.AuthViewModel
 import com.outime.app.presentation.viewmodel.AuthViewModelFactory
 import com.outime.app.presentation.viewmodel.BusinessCatalogViewModel
@@ -56,11 +60,19 @@ fun AppNavGraph() {
     )
 
     val businessViewModel: BusinessViewModel = viewModel(
-        factory = BusinessViewModelFactory(businessRepository)
+        factory = BusinessViewModelFactory(businessRepository, serviceRepository)
     )
 
     val businessCatalogViewModel: BusinessCatalogViewModel = viewModel(
         factory = BusinessCatalogViewModelFactory(businessRepository, serviceRepository)
+    )
+
+    val appointmentRepository = AppointmentRepositoryImpl(
+        firestore = FirebaseFirestore.getInstance()
+    )
+
+    val appointmentViewModel: AppointmentViewModel = viewModel(
+        factory = AppointmentViewModelFactory(appointmentRepository)
     )
 
     NavHost(
@@ -108,13 +120,21 @@ fun AppNavGraph() {
                             inclusive = true
                         }
                     }
+                },
+                onNavigateToRegister = {
+                    navController.navigate(Routes.REGISTER)
                 }
             )
         }
 
         composable(Routes.REGISTER) {
             RegisterScreen(
-                authViewModel = authViewModel
+                authViewModel = authViewModel,
+                onRegisterSuccess = {
+                    navController.navigate(Routes.SPLASH) {
+                        popUpTo(Routes.REGISTER) { inclusive = true }
+                    }
+                }
             )
         }
 
@@ -147,8 +167,68 @@ fun AppNavGraph() {
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onReserveClick = {
-                    // Sprint 5 — Appointment Booking
+                onReserveClick = { serviceId, serviceName ->
+                    val business = businessCatalogViewModel.uiState.value.selectedBusiness
+                    val clientId = authViewModel.currentUserId() ?: ""
+                    if (business != null && clientId.isNotBlank()) {
+                        navController.navigate(
+                            Routes.booking(
+                                businessId = businessId,
+                                serviceId = serviceId,
+                                businessName = business.name,
+                                serviceName = serviceName,
+                                clientId = clientId
+                            )
+                        )
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Routes.BOOKING,
+            arguments = listOf(
+                navArgument("businessId") { type = NavType.StringType },
+                navArgument("serviceId") { type = NavType.StringType },
+                navArgument("businessName") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+                navArgument("serviceName") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+                navArgument("clientId") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val args = backStackEntry.arguments
+            val businessId = args?.getString("businessId") ?: ""
+            val serviceId = args?.getString("serviceId") ?: ""
+            val businessName = java.net.URLDecoder.decode(
+                args?.getString("businessName") ?: "", "UTF-8"
+            )
+            val serviceName = java.net.URLDecoder.decode(
+                args?.getString("serviceName") ?: "", "UTF-8"
+            )
+            val clientId = args?.getString("clientId") ?: ""
+
+            BookingScreen(
+                clientId = clientId,
+                businessId = businessId,
+                businessName = businessName,
+                serviceId = serviceId,
+                serviceName = serviceName,
+                appointmentViewModel = appointmentViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onBookingSuccess = {
+                    navController.navigate(Routes.CLIENT_HOME) {
+                        popUpTo(Routes.CLIENT_HOME) { inclusive = true }
+                    }
                 }
             )
         }
@@ -184,7 +264,7 @@ fun AppNavGraph() {
         }
 
         composable(Routes.CREATE_SERVICE) {
-            val businessId = authViewModel.currentUserId() ?: ""
+            val businessId = businessViewModel.currentBusinessId() ?: ""
             CreateServiceScreen(
                 serviceViewModel = serviceViewModel,
                 businessId = businessId,

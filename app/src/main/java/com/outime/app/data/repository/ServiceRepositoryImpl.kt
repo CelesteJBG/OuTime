@@ -40,4 +40,25 @@ class ServiceRepositoryImpl(
     } catch (e: Exception) {
         Result.failure(e)
     }
+
+    override suspend fun migrateServiceBusinessId(
+        oldBusinessId: String,
+        newBusinessId: String
+    ): Result<Unit> = try {
+        val snapshot = firestore
+            .collection(SERVICES_COLLECTION)
+            .whereEqualTo("businessId", oldBusinessId)
+            .get()
+            .await()
+
+        val batch = firestore.batch()
+        snapshot.documents.forEach { doc ->
+            batch.update(doc.reference, "businessId", newBusinessId)
+        }
+        batch.commit().await()
+
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 }

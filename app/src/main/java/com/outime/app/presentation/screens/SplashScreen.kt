@@ -31,6 +31,7 @@ fun SplashScreen(
 
         val user = authViewModel.getCurrentUser()
 
+        Log.d("OUTIME", "UID AUTH = ${authViewModel.currentUserId()}")
         Log.d("OUTIME", "USER FIRESTORE = $user")
         Log.d("OUTIME", "ROLE FIRESTORE = ${user?.role}")
 

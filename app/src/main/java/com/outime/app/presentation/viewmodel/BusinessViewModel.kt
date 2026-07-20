@@ -4,13 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.outime.app.domain.model.Business
 import com.outime.app.domain.repository.BusinessRepository
+import com.outime.app.domain.repository.ServiceRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class BusinessViewModel(
-    private val businessRepository: BusinessRepository
+    private val businessRepository: BusinessRepository,
+    private val serviceRepository: ServiceRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BusinessUiState())
@@ -129,7 +131,19 @@ class BusinessViewModel(
             business = business
         )
 
+        // Migración automática: si hay servicios guardados con ownerId en lugar de business.id
+        if (business != null && business.id != ownerId) {
+            serviceRepository.migrateServiceBusinessId(
+                oldBusinessId = ownerId,
+                newBusinessId = business.id
+            )
+        }
+
         return business
+    }
+
+    fun currentBusinessId(): String? {
+        return _uiState.value.business?.id
     }
 
     fun resetState() {

@@ -7,4 +7,6 @@ interface ServiceRepository {
     suspend fun createService(service: Service): Result<Unit>
 
     suspend fun getServicesByBusiness(businessId: String): Result<List<Service>>
+
+    suspend fun migrateServiceBusinessId(oldBusinessId: String, newBusinessId: String): Result<Unit>
 }

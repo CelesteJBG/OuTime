@@ -40,7 +40,7 @@ fun BusinessHomeScreen(
     val businessUiState by businessViewModel.uiState.collectAsState()
 
     val business = businessUiState.business
-    val businessId = authViewModel.currentUserId() ?: ""
+    val businessId = business?.id ?: ""
 
     // Carga inicial de servicios
     LaunchedEffect(businessId) {

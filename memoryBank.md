@@ -194,10 +194,10 @@ Cliente → Mis citas → Pendiente / Confirmada / Cancelada / Completada → Fi
 - ✅ Catálogo de negocios (ClientHome rediseñado)
 - ✅ Búsqueda y filtro por categoría
 - ✅ Detalle de negocio (BusinessDetailScreen)
+- ✅ Reserva de cita (Appointment Booking)
 
 ### Pendiente
 
-- ⬜ Reserva de cita (Appointment Booking)
 - ⬜ Gestión de citas del negocio
 - ⬜ Historial de citas del cliente
 - ⬜ Pulido UI
@@ -216,6 +216,7 @@ Cliente → Mis citas → Pendiente / Confirmada / Cancelada / Completada → Fi
 > ✅ terminado
 
 ### Sprint 4 — Client Business Catalog
+> ✅ terminado
 
 **Objetivo:** Construir la experiencia principal del cliente.
 
@@ -232,6 +233,7 @@ Cliente → Mis citas → Pendiente / Confirmada / Cancelada / Completada → Fi
 ---
 
 ### Sprint 5 — Appointment Booking
+> ✅ terminado
 
 **Objetivo:** Reservar citas.
 

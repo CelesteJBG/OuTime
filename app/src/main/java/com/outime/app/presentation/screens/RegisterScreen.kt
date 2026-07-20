@@ -17,7 +17,8 @@ import com.outime.app.presentation.viewmodel.AuthViewModel
 
 @Composable
 fun RegisterScreen(
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    onRegisterSuccess: () -> Unit
 ) {
 
     var name by remember { mutableStateOf("") }
@@ -29,6 +30,13 @@ fun RegisterScreen(
     }
 
     val uiState by authViewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            onRegisterSuccess()
+            authViewModel.resetState()
+        }
+    }
 
     Column(
         modifier = Modifier

@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.outime.app.presentation.viewmodel.AuthViewModel
@@ -16,7 +18,8 @@ import com.outime.app.presentation.viewmodel.AuthViewModel
 @Composable
 fun LoginScreen(
     authViewModel: AuthViewModel,
-    onLoginSuccess:() -> Unit
+    onLoginSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit
 ) {
 
     var email by remember { mutableStateOf("") }
@@ -75,6 +78,13 @@ fun LoginScreen(
 
         if (uiState.isSuccess) {
             Text("Login correcto")
+        }
+
+        TextButton(
+            onClick = onNavigateToRegister,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text("¿No tienes cuenta? Regístrate")
         }
     }
 }
