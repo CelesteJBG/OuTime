@@ -1,37 +1,35 @@
 package com.outime.app.presentation.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -44,12 +42,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
+import com.outime.app.presentation.components.TimeSlotItem
+import com.outime.app.presentation.model.TimeSlot
 import com.outime.app.presentation.viewmodel.AppointmentViewModel
+import com.outime.app.presentation.viewmodel.ScheduleViewModel
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,124 +57,169 @@ fun BookingScreen(
     businessName: String,
     serviceId: String,
     serviceName: String,
+    durationMinutes: Int,
     appointmentViewModel: AppointmentViewModel,
+    scheduleViewModel: ScheduleViewModel,
     onNavigateBack: () -> Unit,
     onBookingSuccess: () -> Unit
 ) {
-    val uiState by appointmentViewModel.uiState.collectAsState()
+    val scheduleUiState by scheduleViewModel.uiState.collectAsState()
+    val appointmentUiState by appointmentViewModel.uiState.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Fecha seleccionada (epoch ms a medianoche)
-    var selectedDateMillis by remember { mutableStateOf<Long?>(null) }
-    // Hora seleccionada
-    var selectedHour by remember { mutableStateOf(10) }
-    var selectedMinute by remember { mutableStateOf(0) }
+    // Cargar horario y fechas bloqueadas del negocio al entrar
+    LaunchedEffect(businessId) {
+        scheduleViewModel.loadSchedule(businessId)
+        scheduleViewModel.loadBlockedDates(businessId)
+    }
 
-    // Control de diálogos
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
+    // Estado del calendario
+    val datePickerState = rememberDatePickerState(
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                // 1. No fechas pasadas (comparar a medianoche)
+                val todayMidnight = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
 
-    val datePickerState = rememberDatePickerState()
-    val timePickerState = rememberTimePickerState(
-        initialHour = selectedHour,
-        initialMinute = selectedMinute,
-        is24Hour = true
+                val candidateMidnight = Calendar.getInstance().apply {
+                    timeInMillis = utcTimeMillis
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+
+                if (candidateMidnight < todayMidnight) return false
+
+                // 2. Día de la semana laborable
+                val schedule = scheduleUiState.schedule ?: return true
+                val dayOfWeek = Calendar.getInstance().apply {
+                    timeInMillis = utcTimeMillis
+                }.get(Calendar.DAY_OF_WEEK)
+
+                val daySchedule = schedule.weeklyHours[dayOfWeek]
+                if (daySchedule == null || !daySchedule.isOpen) return false
+
+                // 3. No está en fechas bloqueadas
+                val isBlocked = scheduleUiState.blockedDates.any { blocked ->
+                    val blockedMidnight = Calendar.getInstance().apply {
+                        timeInMillis = blocked.date
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }.timeInMillis
+                    blockedMidnight == candidateMidnight
+                }
+                return !isBlocked
+            }
+        }
     )
 
-    // Formatters
-    val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
-    val timeFormatter = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
+    // Franjas generadas para el día seleccionado
+    var timeSlots by remember { mutableStateOf<List<TimeSlot>>(emptyList()) }
 
-    // Texto de fecha y hora para mostrar
-    val dateText = selectedDateMillis?.let { dateFormatter.format(it) } ?: "Seleccionar fecha"
-    val timeText = run {
-        val cal = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, selectedHour)
-            set(Calendar.MINUTE, selectedMinute)
+    // 1) Cuando cambia la fecha seleccionada, cargar las citas del día en Firestore
+    LaunchedEffect(datePickerState.selectedDateMillis, scheduleUiState.schedule) {
+        val dateMillis = datePickerState.selectedDateMillis
+        val schedule = scheduleUiState.schedule
+
+        if (dateMillis != null && schedule != null) {
+            val startOfDay = Calendar.getInstance().apply {
+                timeInMillis = dateMillis
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+
+            val endOfDay = Calendar.getInstance().apply {
+                timeInMillis = dateMillis
+                set(Calendar.HOUR_OF_DAY, 23)
+                set(Calendar.MINUTE, 59)
+                set(Calendar.SECOND, 59)
+                set(Calendar.MILLISECOND, 999)
+            }.timeInMillis
+
+            Log.d("BookingScreen", "Fecha cambiada → cargar citas del día")
+            appointmentViewModel.loadAppointmentsByBusinessAndDate(businessId, startOfDay, endOfDay)
+        } else {
+            timeSlots = emptyList()
         }
-        timeFormatter.format(cal.time)
     }
 
-    // Reaccionar al éxito de la reserva
-    LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) {
-            appointmentViewModel.resetState()
+    // 2) Cuando llegan las citas del día (o cambia el horario), regenerar las franjas
+    LaunchedEffect(appointmentUiState.dayAppointments, scheduleUiState.schedule, datePickerState.selectedDateMillis) {
+        val dateMillis = datePickerState.selectedDateMillis
+        val schedule = scheduleUiState.schedule
+
+        if (dateMillis != null && schedule != null) {
+            val startOfDay = Calendar.getInstance().apply {
+                timeInMillis = dateMillis
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+
+            val slots = scheduleViewModel.generateTimeSlots(
+                schedule = schedule,
+                dateMillis = startOfDay,
+                durationMinutes = durationMinutes,
+                existingAppointments = appointmentUiState.dayAppointments
+            )
+            timeSlots = slots
+            Log.d("BookingScreen", "Franjas regeneradas → ${slots.size} total, ${slots.count { it.isAvailable }} disponibles")
+        }
+    }
+
+    // 3) Reaccionar al éxito de la reserva: Snackbar + recarga de citas
+    LaunchedEffect(appointmentUiState.isSuccess) {
+        if (appointmentUiState.isSuccess) {
+            Log.d("BookingScreen", "isSuccess=true → mostrar Snackbar y recargar citas")
             scope.launch {
-                snackbarHostState.showSnackbar("¡Cita reservada con éxito!")
+                snackbarHostState.showSnackbar("Cita confirmada")
             }
-            onBookingSuccess()
+            appointmentViewModel.resetState()
+
+            // Recargar las citas del día para que la franja se marque como ocupada
+            val dateMillis = datePickerState.selectedDateMillis
+            if (dateMillis != null) {
+                val startOfDay = Calendar.getInstance().apply {
+                    timeInMillis = dateMillis
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+
+                val endOfDay = Calendar.getInstance().apply {
+                    timeInMillis = dateMillis
+                    set(Calendar.HOUR_OF_DAY, 23)
+                    set(Calendar.MINUTE, 59)
+                    set(Calendar.SECOND, 59)
+                    set(Calendar.MILLISECOND, 999)
+                }.timeInMillis
+
+                appointmentViewModel.loadAppointmentsByBusinessAndDate(businessId, startOfDay, endOfDay)
+            }
         }
     }
 
-    // Reaccionar a errores
-    LaunchedEffect(uiState.error) {
-        uiState.error?.let { errorMsg ->
+    // 4) Reaccionar a errores
+    LaunchedEffect(appointmentUiState.error) {
+        appointmentUiState.error?.let { errorMsg ->
+            Log.e("BookingScreen", "Error en UI: $errorMsg")
             scope.launch {
                 snackbarHostState.showSnackbar("Error: $errorMsg")
             }
             appointmentViewModel.resetState()
-        }
-    }
-
-    // Diálogo DatePicker
-    if (showDatePicker) {
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let {
-                        selectedDateMillis = it
-                    }
-                    showDatePicker = false
-                }) {
-                    Text("Aceptar")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancelar")
-                }
-            }
-        ) {
-            DatePicker(state = datePickerState)
-        }
-    }
-
-    // Diálogo TimePicker
-    if (showTimePicker) {
-        Dialog(onDismissRequest = { showTimePicker = false }) {
-            Card(
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Seleccionar hora",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    TimePicker(state = timePickerState)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(onClick = { showTimePicker = false }) {
-                            Text("Cancelar")
-                        }
-                        TextButton(onClick = {
-                            selectedHour = timePickerState.hour
-                            selectedMinute = timePickerState.minute
-                            showTimePicker = false
-                        }) {
-                            Text("Aceptar")
-                        }
-                    }
-                }
-            }
         }
     }
 
@@ -211,7 +254,6 @@ fun BookingScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
                 // Resumen del negocio y servicio
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -236,57 +278,81 @@ fun BookingScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
+                        Text(
+                            text = "Duración: $durationMinutes min",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
 
-                // Selector de fecha
-                OutlinedButton(
-                    onClick = { showDatePicker = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(text = "📅  $dateText")
-                }
-
-                // Selector de hora
-                OutlinedButton(
-                    onClick = { showTimePicker = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(text = "🕐  $timeText")
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Botón confirmar
-                val isFormValid = selectedDateMillis != null
-                Button(
-                    onClick = {
-                        val dateMs = selectedDateMillis ?: return@Button
-                        // Combinar fecha + hora en un único timestamp
-                        val calendar = Calendar.getInstance().apply {
-                            timeInMillis = dateMs
-                            set(Calendar.HOUR_OF_DAY, selectedHour)
-                            set(Calendar.MINUTE, selectedMinute)
-                            set(Calendar.SECOND, 0)
-                            set(Calendar.MILLISECOND, 0)
-                        }
-                        appointmentViewModel.createAppointment(
-                            clientId = clientId,
-                            businessId = businessId,
-                            businessName = businessName,
-                            serviceId = serviceId,
-                            serviceName = serviceName,
-                            dateTime = calendar.timeInMillis
-                        )
-                    },
+                // Calendario
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = isFormValid && !uiState.isLoading
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                 ) {
-                    Text("Confirmar reserva")
+                    DatePicker(
+                        state = datePickerState,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                // Franjas horarias
+                if (datePickerState.selectedDateMillis != null) {
+                    if (scheduleUiState.isLoading || appointmentUiState.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .padding(16.dp)
+                        )
+                    } else if (timeSlots.isEmpty()) {
+                        Text(
+                            text = "No hay franjas disponibles para este día.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                    } else {
+                        Column {
+                            Text(
+                                text = "Franjas disponibles",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(3),
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(timeSlots) { slot ->
+                                    TimeSlotItem(
+                                        timeSlot = slot,
+                                        isSelected = false,
+                                        onClick = {
+                                            Log.d("BookingScreen", "Franja pulsada: ${slot.startMillis} (disponible=${slot.isAvailable})")
+                                            if (slot.isAvailable) {
+                                                appointmentViewModel.createAppointment(
+                                                    clientId = clientId,
+                                                    businessId = businessId,
+                                                    businessName = businessName,
+                                                    serviceId = serviceId,
+                                                    serviceName = serviceName,
+                                                    dateTime = slot.startMillis
+                                                )
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
-            if (uiState.isLoading) {
+            if (appointmentUiState.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center)
                 )

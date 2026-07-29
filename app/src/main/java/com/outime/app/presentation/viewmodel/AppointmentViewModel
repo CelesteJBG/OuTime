@@ -1,5 +1,6 @@
 package com.outime.app.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.outime.app.domain.model.Appointment
@@ -25,6 +26,11 @@ class AppointmentViewModel(
         serviceName: String,
         dateTime: Long
     ) {
+        Log.d(
+            "ApptVM",
+            "createAppointment() → clientId=$clientId, businessId=$businessId, " +
+                    "serviceId=$serviceId, dateTime=$dateTime"
+        )
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
@@ -42,12 +48,14 @@ class AppointmentViewModel(
 
             result.fold(
                 onSuccess = {
+                    Log.d("ApptVM", "createAppointment() OK")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isSuccess = true
                     )
                 },
                 onFailure = { error ->
+                    Log.e("ApptVM", "createAppointment() FALLÓ", error)
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         error = error.message
@@ -85,6 +93,7 @@ class AppointmentViewModel(
         startOfDay: Long,
         endOfDay: Long
     ) {
+        Log.d("ApptVM", "loadAppointmentsByBusinessAndDate() → businessId=$businessId, start=$startOfDay, end=$endOfDay")
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
@@ -94,12 +103,14 @@ class AppointmentViewModel(
 
             result.fold(
                 onSuccess = { appointments ->
+                    Log.d("ApptVM", "loadAppointmentsByBusinessAndDate() OK → ${appointments.size} citas")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         dayAppointments = appointments
                     )
                 },
                 onFailure = { error ->
+                    Log.e("ApptVM", "loadAppointmentsByBusinessAndDate() FALLÓ", error)
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         error = error.message

@@ -8,7 +8,7 @@ data class Appointment(
     val serviceId: String = "",
     val serviceName: String = "",
     val dateTime: Long = 0L,
-    val status: AppointmentStatus = AppointmentStatus.PENDING,
+    val status: AppointmentStatus = AppointmentStatus.CONFIRMED,
     val createdAt: Long = System.currentTimeMillis()
 )
 

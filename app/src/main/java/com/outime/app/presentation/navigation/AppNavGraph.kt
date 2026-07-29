@@ -12,6 +12,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.outime.app.data.repository.AppointmentRepositoryImpl
 import com.outime.app.data.repository.AuthRepositoryImpl
 import com.outime.app.data.repository.BusinessRepositoryImpl
+import com.outime.app.data.repository.ScheduleRepositoryImpl
 import com.outime.app.data.repository.ServiceRepositoryImpl
 import com.outime.app.presentation.screens.BookingScreen
 import com.outime.app.presentation.screens.BusinessDetailScreen
@@ -21,6 +22,7 @@ import com.outime.app.presentation.screens.CreateBusinessScreen
 import com.outime.app.presentation.screens.CreateServiceScreen
 import com.outime.app.presentation.screens.LoginScreen
 import com.outime.app.presentation.screens.RegisterScreen
+import com.outime.app.presentation.screens.ScheduleManagementScreen
 import com.outime.app.presentation.screens.SplashScreen
 import com.outime.app.presentation.viewmodel.AppointmentViewModel
 import com.outime.app.presentation.viewmodel.AppointmentViewModelFactory
@@ -30,6 +32,8 @@ import com.outime.app.presentation.viewmodel.BusinessCatalogViewModel
 import com.outime.app.presentation.viewmodel.BusinessCatalogViewModelFactory
 import com.outime.app.presentation.viewmodel.BusinessViewModel
 import com.outime.app.presentation.viewmodel.BusinessViewModelFactory
+import com.outime.app.presentation.viewmodel.ScheduleViewModel
+import com.outime.app.presentation.viewmodel.ScheduleViewModelFactory
 import com.outime.app.presentation.viewmodel.ServiceViewModel
 import com.outime.app.presentation.viewmodel.ServiceViewModelFactory
 
@@ -73,6 +77,14 @@ fun AppNavGraph() {
 
     val appointmentViewModel: AppointmentViewModel = viewModel(
         factory = AppointmentViewModelFactory(appointmentRepository)
+    )
+
+    val scheduleRepository = ScheduleRepositoryImpl(
+        firestore = FirebaseFirestore.getInstance()
+    )
+
+    val scheduleViewModel: ScheduleViewModel = viewModel(
+        factory = ScheduleViewModelFactory(scheduleRepository)
     )
 
     NavHost(
@@ -167,7 +179,7 @@ fun AppNavGraph() {
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onReserveClick = { serviceId, serviceName ->
+                onReserveClick = { serviceId, serviceName, durationMinutes ->
                     val business = businessCatalogViewModel.uiState.value.selectedBusiness
                     val clientId = authViewModel.currentUserId() ?: ""
                     if (business != null && clientId.isNotBlank()) {
@@ -177,7 +189,8 @@ fun AppNavGraph() {
                                 serviceId = serviceId,
                                 businessName = business.name,
                                 serviceName = serviceName,
-                                clientId = clientId
+                                clientId = clientId,
+                                durationMinutes = durationMinutes
                             )
                         )
                     }
@@ -201,6 +214,10 @@ fun AppNavGraph() {
                 navArgument("clientId") {
                     type = NavType.StringType
                     defaultValue = ""
+                },
+                navArgument("durationMinutes") {
+                    type = NavType.IntType
+                    defaultValue = 30
                 }
             )
         ) { backStackEntry ->
@@ -214,6 +231,7 @@ fun AppNavGraph() {
                 args?.getString("serviceName") ?: "", "UTF-8"
             )
             val clientId = args?.getString("clientId") ?: ""
+            val durationMinutes = args?.getInt("durationMinutes") ?: 30
 
             BookingScreen(
                 clientId = clientId,
@@ -221,7 +239,9 @@ fun AppNavGraph() {
                 businessName = businessName,
                 serviceId = serviceId,
                 serviceName = serviceName,
+                durationMinutes = durationMinutes,
                 appointmentViewModel = appointmentViewModel,
+                scheduleViewModel = scheduleViewModel,
                 onNavigateBack = {
                     navController.popBackStack()
                 },
@@ -242,10 +262,24 @@ fun AppNavGraph() {
                 onNavigateToCreateService = {
                     navController.navigate(Routes.CREATE_SERVICE)
                 },
+                onNavigateToScheduleManagement = {
+                    navController.navigate(Routes.SCHEDULE_MANAGEMENT)
+                },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0)
                     }
+                }
+            )
+        }
+
+        composable(Routes.SCHEDULE_MANAGEMENT) {
+            val businessId = businessViewModel.currentBusinessId() ?: ""
+            ScheduleManagementScreen(
+                businessId = businessId,
+                scheduleViewModel = scheduleViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }

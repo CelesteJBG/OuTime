@@ -9,6 +9,12 @@ interface AppointmentRepository {
 
     suspend fun getAppointmentsByBusiness(businessId: String): Result<List<Appointment>>
 
+    suspend fun getAppointmentsByBusinessAndDate(
+        businessId: String,
+        startOfDay: Long,
+        endOfDay: Long
+    ): Result<List<Appointment>>
+
     suspend fun getAppointmentsByClient(clientId: String): Result<List<Appointment>>
 
     suspend fun getAppointmentById(appointmentId: String): Result<Appointment?>

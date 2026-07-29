@@ -110,11 +110,25 @@ Business Home → Crear servicio
         └── Guardar → Firestore → Actualizar lista
 ```
 
+### Gestión de disponibilidad (Business)
+
+```
+Business Home → Gestionar disponibilidad
+  └── Horario semanal: activar/desactivar días
+        └── Configurar turnos (mañana y/o tarde)
+  └── Fechas bloqueadas: añadir / eliminar
+  └── Guardar → Firestore (business_schedules + blocked_dates)
+```
+
 ### Gestión de citas (Business) *(sprint posterior)*
 
 ```
-Business Home → Mis citas → Lista → Aceptar / Cancelar / Completar
+Business Home → Mis citas → Agenda diaria
+  └── Consultar citas CONFIRMED
+  └── Cancelar / Marcar como completada
 ```
+
+> **Nota:** No existe aprobación manual. Las citas se crean directamente como `CONFIRMED`.
 
 ---
 
@@ -143,20 +157,28 @@ Lista de negocios → BusinessDetailScreen
   └── Muestra: Nombre / Descripción / Categoría / Lista de servicios
 ```
 
-### Reserva de cita
+### Reserva de cita (flujo basado en disponibilidad)
 
 ```
 Cliente
-  └── Selecciona servicio
-        └── Elegir fecha
-              └── Elegir hora
-                    └── Reservar → Firestore → Appointment
+  └── Selecciona servicio (con duración)
+        └── Calendario mensual (días no disponibles en gris)
+              └── Selecciona día válido
+                    └── Cuadrícula de franjas 🟢/🔴 (generadas automáticamente)
+                          └── Pulsa franja verde → Cita CONFIRMED
+                                └── La franja deja de estar disponible
 ```
+
+**Generación automática de franjas:**
+- Horario del negocio (1-2 turnos/día)
+- Duración del servicio seleccionado
+- Citas ya existentes (marcadas como ocupadas)
+- Fechas bloqueadas (día no disponible)
 
 ### Gestión de citas del cliente
 
 ```
-Cliente → Mis citas → Pendiente / Confirmada / Cancelada / Completada → Firestore
+Cliente → Mis citas → Confirmada / Cancelada / Completada → Firestore
 ```
 
 ---
@@ -165,17 +187,14 @@ Cliente → Mis citas → Pendiente / Confirmada / Cancelada / Completada → Fi
 
 ### Colecciones actuales
 
-| Colección    | Estado     |
-|--------------|------------|
-| `users`      | ✅ activa  |
-| `businesses` | ✅ activa  |
-| `services`   | ✅ activa  |
-
-### Colección siguiente
-
-| Colección      | Estado     |
-|----------------|------------|
-| `appointments` | ⬜ pendiente |
+| Colección            | Estado     | Descripción |
+|----------------------|------------|-------------|
+| `users`              | ✅ activa  | Usuarios con rol |
+| `businesses`         | ✅ activa  | Negocios |
+| `services`           | ✅ activa  | Servicios (con `durationMinutes`) |
+| `appointments`       | ✅ activa  | Citas (estado `CONFIRMED` por defecto) |
+| `business_schedules` | ✅ activa  | Horario semanal del negocio (1-2 turnos/día) |
+| `blocked_dates`      | ✅ activa  | Fechas bloqueadas por el negocio |
 
 ---
 
@@ -194,11 +213,16 @@ Cliente → Mis citas → Pendiente / Confirmada / Cancelada / Completada → Fi
 - ✅ Catálogo de negocios (ClientHome rediseñado)
 - ✅ Búsqueda y filtro por categoría
 - ✅ Detalle de negocio (BusinessDetailScreen)
-- ✅ Reserva de cita (Appointment Booking)
+- ✅ Reserva de cita basada en disponibilidad (rediseñada)
+- ✅ Gestión de disponibilidad del negocio (ScheduleManagementScreen)
+- ✅ Generación automática de franjas horarias
+- ✅ Calendario mensual con días no disponibles deshabilitados
+- ✅ Cuadrícula visual de franjas 🟢/🔴
+- ✅ Citas confirmadas automáticamente (sin aprobación manual)
 
 ### Pendiente
 
-- ⬜ Gestión de citas del negocio
+- ⬜ Gestión de citas del negocio (agenda diaria, cancelar, completar)
 - ⬜ Historial de citas del cliente
 - ⬜ Pulido UI
 

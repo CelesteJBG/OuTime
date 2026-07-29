@@ -34,6 +34,7 @@ fun BusinessHomeScreen(
     serviceViewModel: ServiceViewModel,
     businessViewModel: BusinessViewModel,
     onNavigateToCreateService: () -> Unit,
+    onNavigateToScheduleManagement: () -> Unit,
     onLogout: () -> Unit
 ) {
     val serviceUiState by serviceViewModel.uiState.collectAsState()
@@ -83,6 +84,15 @@ fun BusinessHomeScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Crear servicio")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = onNavigateToScheduleManagement,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Gestionar disponibilidad")
         }
 
         Spacer(modifier = Modifier.height(8.dp))

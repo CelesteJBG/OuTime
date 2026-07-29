@@ -7,5 +7,6 @@ data class AppointmentUiState(
     val isSuccess: Boolean = false,
     val error: String? = null,
     val appointments: List<Appointment> = emptyList(),
+    val dayAppointments: List<Appointment> = emptyList(),
     val selectedAppointment: Appointment? = null
 )
