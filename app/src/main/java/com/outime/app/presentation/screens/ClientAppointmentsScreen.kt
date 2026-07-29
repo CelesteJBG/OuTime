@@ -15,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EventBusy
 import androidx.compose.material3.Button
@@ -58,8 +57,8 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BusinessAppointmentsScreen(
-    businessId: String,
+fun ClientAppointmentsScreen(
+    clientId: String,
     appointmentViewModel: AppointmentViewModel,
     onNavigateBack: () -> Unit
 ) {
@@ -69,23 +68,23 @@ fun BusinessAppointmentsScreen(
 
     var selectedFilter by remember { mutableStateOf<AppointmentStatus?>(null) }
 
-    // Cargar citas del negocio al entrar
-    LaunchedEffect(businessId) {
-        if (businessId.isNotEmpty()) {
-            appointmentViewModel.loadAppointmentsByBusiness(businessId)
+    // Cargar citas del cliente al entrar
+    LaunchedEffect(clientId) {
+        if (clientId.isNotEmpty()) {
+            appointmentViewModel.loadAppointmentsByClient(clientId)
         }
     }
 
-    // Reaccionar al éxito de una acción (marcar completada / cancelar)
+    // Reaccionar al éxito de una acción (cancelar)
     LaunchedEffect(appointmentUiState.isSuccess) {
         if (appointmentUiState.isSuccess) {
             scope.launch {
-                snackbarHostState.showSnackbar("Acción realizada correctamente")
+                snackbarHostState.showSnackbar("Reserva cancelada correctamente")
             }
             appointmentViewModel.resetState()
             // Recargar la lista
-            if (businessId.isNotEmpty()) {
-                appointmentViewModel.loadAppointmentsByBusiness(businessId)
+            if (clientId.isNotEmpty()) {
+                appointmentViewModel.loadAppointmentsByClient(clientId)
             }
         }
     }
@@ -112,7 +111,7 @@ fun BusinessAppointmentsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mis citas") },
+                title = { Text("Mis reservas") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -190,14 +189,14 @@ fun BusinessAppointmentsScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Error al cargar las citas.",
+                            text = "Error al cargar las reservas.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Button(
                             onClick = {
-                                if (businessId.isNotEmpty()) {
-                                    appointmentViewModel.loadAppointmentsByBusiness(businessId)
+                                if (clientId.isNotEmpty()) {
+                                    appointmentViewModel.loadAppointmentsByClient(clientId)
                                 }
                             }
                         ) {
@@ -224,13 +223,13 @@ fun BusinessAppointmentsScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Todavía no tienes citas.",
+                            text = "Todavía no tienes reservas.",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         if (selectedFilter != null) {
                             Text(
-                                text = "No hay citas con este filtro.",
+                                text = "No hay reservas con este filtro.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -259,14 +258,8 @@ fun BusinessAppointmentsScreen(
                             )
                         }
                         items(appointmentsForDate) { appointment ->
-                            BusinessAppointmentCard(
+                            ClientAppointmentCard(
                                 appointment = appointment,
-                                onMarkCompleted = {
-                                    appointmentViewModel.updateAppointmentStatus(
-                                        appointment.id,
-                                        AppointmentStatus.COMPLETED
-                                    )
-                                },
                                 onCancel = {
                                     appointmentViewModel.updateAppointmentStatus(
                                         appointment.id,
@@ -283,9 +276,8 @@ fun BusinessAppointmentsScreen(
 }
 
 @Composable
-private fun BusinessAppointmentCard(
+private fun ClientAppointmentCard(
     appointment: Appointment,
-    onMarkCompleted: () -> Unit,
     onCancel: () -> Unit
 ) {
     val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
@@ -325,16 +317,25 @@ private fun BusinessAppointmentCard(
                 )
             }
 
-            // Cliente
-            if (appointment.clientId.isNotBlank()) {
-                Text(
-                    text = "Cliente: ${appointment.clientId}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            // Negocio con icono
+            if (appointment.businessName.isNotBlank()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "📍",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        text = appointment.businessName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
-            // Estado (chip visual)
+            // Estado (chip visual) + acción
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -358,46 +359,26 @@ private fun BusinessAppointmentCard(
                     )
                 }
 
-                // Acciones solo si está confirmada
+                // Acción: solo cancelar si está confirmada
                 if (appointment.status == AppointmentStatus.CONFIRMED) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    OutlinedButton(
+                        onClick = onCancel,
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                            horizontal = 12.dp,
+                            vertical = 4.dp
+                        )
                     ) {
-                        OutlinedButton(
-                            onClick = onMarkCompleted,
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                                horizontal = 12.dp,
-                                vertical = 4.dp
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.size(4.dp))
-                            Text("Completar", style = MaterialTheme.typography.labelSmall)
-                        }
-                        OutlinedButton(
-                            onClick = onCancel,
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
-                            ),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                                horizontal = 12.dp,
-                                vertical = 4.dp
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.size(4.dp))
-                            Text("Cancelar", style = MaterialTheme.typography.labelSmall)
-                        }
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.size(4.dp))
+                        Text("Cancelar", style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }

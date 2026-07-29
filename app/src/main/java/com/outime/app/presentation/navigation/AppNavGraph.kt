@@ -18,6 +18,7 @@ import com.outime.app.presentation.screens.BookingScreen
 import com.outime.app.presentation.screens.BusinessAppointmentsScreen
 import com.outime.app.presentation.screens.BusinessDetailScreen
 import com.outime.app.presentation.screens.BusinessHomeScreen
+import com.outime.app.presentation.screens.ClientAppointmentsScreen
 import com.outime.app.presentation.screens.ClientHomeScreen
 import com.outime.app.presentation.screens.CreateBusinessScreen
 import com.outime.app.presentation.screens.CreateServiceScreen
@@ -158,6 +159,9 @@ fun AppNavGraph() {
                 onNavigateToDetail = { businessId ->
                     navController.navigate(Routes.businessDetail(businessId))
                 },
+                onNavigateToClientAppointments = {
+                    navController.navigate(Routes.CLIENT_APPOINTMENTS)
+                },
                 onLogout = {
                     authViewModel.logout()
                     navController.navigate(Routes.LOGIN) {
@@ -292,6 +296,17 @@ fun AppNavGraph() {
             val businessId = businessViewModel.currentBusinessId() ?: ""
             BusinessAppointmentsScreen(
                 businessId = businessId,
+                appointmentViewModel = appointmentViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.CLIENT_APPOINTMENTS) {
+            val clientId = authViewModel.currentUserId() ?: ""
+            ClientAppointmentsScreen(
+                clientId = clientId,
                 appointmentViewModel = appointmentViewModel,
                 onNavigateBack = {
                     navController.popBackStack()

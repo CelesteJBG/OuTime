@@ -124,7 +124,7 @@ Business Home → Gestionar disponibilidad
 
 ```
 Business Home → Mis citas → BusinessAppointmentsScreen
-  └── Lista de citas agrupadas por fecha (Hoy / Mañana / fecha)
+  └── Lista de citas agrupada por fecha (Hoy / Mañana / fecha)
   └── Filtros: Todas / Confirmadas / Completadas / Canceladas
   └── Acciones sobre citas Confirmadas:
         ├── Marcar como Completada
@@ -182,7 +182,12 @@ Cliente
 ### Gestión de citas del cliente
 
 ```
-Cliente → Mis citas → Confirmada / Cancelada / Completada → Firestore
+Cliente → Mis citas → ClientAppointmentsScreen
+  └── Lista de citas agrupada por fecha (Hoy / Mañana / fecha)
+  └── Filtros: Todas / Confirmadas / Completadas / Canceladas
+  └── Acciones sobre citas Confirmadas:
+        └── Cancelar
+  └── Completadas y Canceladas: solo lectura
 ```
 
 ---
@@ -224,10 +229,11 @@ Cliente → Mis citas → Confirmada / Cancelada / Completada → Firestore
 - ✅ Cuadrícula visual de franjas 🟢/🔴
 - ✅ Citas confirmadas automáticamente (sin aprobación manual)
 - ✅ Gestión de citas del negocio (BusinessAppointmentsScreen)
+- ✅ Historial de citas del cliente (ClientAppointmentsScreen)
+- ✅ Componentes compartidos (AppointmentShared.kt)
 
 ### Pendiente
 
-- ⬜ Historial de citas del cliente
 - ⬜ Pulido UI
 
 ---
@@ -281,7 +287,7 @@ Cliente → Mis citas → Confirmada / Cancelada / Completada → Firestore
 **Objetivo:** Gestionar reservas.
 
 **Incluye:**
-- Lista de citas agrupadas por fecha
+- Lista de citas agrupada por fecha
 - Filtros por estado (Todas / Confirmadas / Completadas / Canceladas)
 - Marcar como Completada
 - Cancelar
@@ -293,8 +299,18 @@ Cliente → Mis citas → Confirmada / Cancelada / Completada → Firestore
 ---
 
 ### Sprint 7 — Client Appointment History
+> ✅ terminado
 
 **Objetivo:** Mostrar historial del cliente.
+
+**Incluye:**
+- Lista de citas del cliente agrupada por fecha
+- Filtros por estado (Todas / Confirmadas / Completadas / Canceladas)
+- Cancelar citas confirmadas
+- Componentes compartidos (StatusConfig, groupAppointmentsByDate)
+- Card de acceso desde ClientHomeScreen
+- Estados vacíos y loading
+- Recarga automática tras cancelar
 
 **Commit:** `Implement client appointment history`
 
