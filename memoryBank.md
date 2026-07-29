@@ -99,7 +99,7 @@ Splash
 Debe mostrar:
 
 - **Datos del negocio:** Nombre, Descripción, Categoría
-- **Botones:** Crear servicio / Cerrar sesión
+- **Botones:** Crear servicio / Gestionar disponibilidad / Mis citas / Cerrar sesión
 - **Lista:** Servicios publicados
 
 ### Gestión de Servicios
@@ -120,12 +120,16 @@ Business Home → Gestionar disponibilidad
   └── Guardar → Firestore (business_schedules + blocked_dates)
 ```
 
-### Gestión de citas (Business) *(sprint posterior)*
+### Gestión de citas (Business)
 
 ```
-Business Home → Mis citas → Agenda diaria
-  └── Consultar citas CONFIRMED
-  └── Cancelar / Marcar como completada
+Business Home → Mis citas → BusinessAppointmentsScreen
+  └── Lista de citas agrupadas por fecha (Hoy / Mañana / fecha)
+  └── Filtros: Todas / Confirmadas / Completadas / Canceladas
+  └── Acciones sobre citas Confirmadas:
+        ├── Marcar como Completada
+        └── Cancelar
+  └── Completadas y Canceladas: solo lectura
 ```
 
 > **Nota:** No existe aprobación manual. Las citas se crean directamente como `CONFIRMED`.
@@ -219,10 +223,10 @@ Cliente → Mis citas → Confirmada / Cancelada / Completada → Firestore
 - ✅ Calendario mensual con días no disponibles deshabilitados
 - ✅ Cuadrícula visual de franjas 🟢/🔴
 - ✅ Citas confirmadas automáticamente (sin aprobación manual)
+- ✅ Gestión de citas del negocio (BusinessAppointmentsScreen)
 
 ### Pendiente
 
-- ⬜ Gestión de citas del negocio (agenda diaria, cancelar, completar)
 - ⬜ Historial de citas del cliente
 - ⬜ Pulido UI
 
@@ -272,12 +276,17 @@ Cliente → Mis citas → Confirmada / Cancelada / Completada → Firestore
 ---
 
 ### Sprint 6 — Business Appointment Management
+> ✅ terminado
 
 **Objetivo:** Gestionar reservas.
 
 **Incluye:**
-- Lista de citas
-- Aceptar / Cancelar / Completar
+- Lista de citas agrupadas por fecha
+- Filtros por estado (Todas / Confirmadas / Completadas / Canceladas)
+- Marcar como Completada
+- Cancelar
+- Estados vacíos y loading
+- Recarga automática tras acciones
 
 **Commit:** `Implement business appointment management`
 

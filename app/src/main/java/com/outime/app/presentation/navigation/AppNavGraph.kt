@@ -15,6 +15,7 @@ import com.outime.app.data.repository.BusinessRepositoryImpl
 import com.outime.app.data.repository.ScheduleRepositoryImpl
 import com.outime.app.data.repository.ServiceRepositoryImpl
 import com.outime.app.presentation.screens.BookingScreen
+import com.outime.app.presentation.screens.BusinessAppointmentsScreen
 import com.outime.app.presentation.screens.BusinessDetailScreen
 import com.outime.app.presentation.screens.BusinessHomeScreen
 import com.outime.app.presentation.screens.ClientHomeScreen
@@ -265,6 +266,9 @@ fun AppNavGraph() {
                 onNavigateToScheduleManagement = {
                     navController.navigate(Routes.SCHEDULE_MANAGEMENT)
                 },
+                onNavigateToBusinessAppointments = {
+                    navController.navigate(Routes.BUSINESS_APPOINTMENTS)
+                },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0)
@@ -278,6 +282,17 @@ fun AppNavGraph() {
             ScheduleManagementScreen(
                 businessId = businessId,
                 scheduleViewModel = scheduleViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.BUSINESS_APPOINTMENTS) {
+            val businessId = businessViewModel.currentBusinessId() ?: ""
+            BusinessAppointmentsScreen(
+                businessId = businessId,
+                appointmentViewModel = appointmentViewModel,
                 onNavigateBack = {
                     navController.popBackStack()
                 }

@@ -11,6 +11,7 @@ object Routes {
     const val CREATE_SERVICE = "create_service"
     const val CREATE_BUSINESS = "create_business"
     const val SCHEDULE_MANAGEMENT = "schedule_management"
+    const val BUSINESS_APPOINTMENTS = "business_appointments"
 
     const val BUSINESS_DETAIL = "business_detail/{businessId}"
 

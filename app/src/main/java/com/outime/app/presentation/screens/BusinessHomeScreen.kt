@@ -35,6 +35,7 @@ fun BusinessHomeScreen(
     businessViewModel: BusinessViewModel,
     onNavigateToCreateService: () -> Unit,
     onNavigateToScheduleManagement: () -> Unit,
+    onNavigateToBusinessAppointments: () -> Unit,
     onLogout: () -> Unit
 ) {
     val serviceUiState by serviceViewModel.uiState.collectAsState()
@@ -93,6 +94,15 @@ fun BusinessHomeScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Gestionar disponibilidad")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = onNavigateToBusinessAppointments,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Mis citas")
         }
 
         Spacer(modifier = Modifier.height(8.dp))
