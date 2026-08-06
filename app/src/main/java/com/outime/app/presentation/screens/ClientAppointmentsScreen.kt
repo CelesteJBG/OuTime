@@ -1,8 +1,10 @@
 package com.outime.app.presentation.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,13 +12,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EventBusy
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -24,6 +27,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -79,7 +83,7 @@ fun ClientAppointmentsScreen(
     LaunchedEffect(appointmentUiState.isSuccess) {
         if (appointmentUiState.isSuccess) {
             scope.launch {
-                snackbarHostState.showSnackbar("Reserva cancelada correctamente")
+                snackbarHostState.showSnackbar("Reserva cancelada.")
             }
             appointmentViewModel.resetState()
             // Recargar la lista
@@ -111,7 +115,14 @@ fun ClientAppointmentsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mis reservas") },
+                title = {
+                    Text(
+                        text = "Mis reservas",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -131,45 +142,72 @@ fun ClientAppointmentsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
         ) {
             // Filtros
-            Row(
+            LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(vertical = 8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilterChip(
-                    selected = selectedFilter == null,
-                    onClick = { selectedFilter = null },
-                    label = { Text("Todas") }
-                )
-                FilterChip(
-                    selected = selectedFilter == AppointmentStatus.CONFIRMED,
-                    onClick = { selectedFilter = AppointmentStatus.CONFIRMED },
-                    label = { Text("Confirmadas") }
-                )
-                FilterChip(
-                    selected = selectedFilter == AppointmentStatus.COMPLETED,
-                    onClick = { selectedFilter = AppointmentStatus.COMPLETED },
-                    label = { Text("Completadas") }
-                )
-                FilterChip(
-                    selected = selectedFilter == AppointmentStatus.CANCELLED,
-                    onClick = { selectedFilter = AppointmentStatus.CANCELLED },
-                    label = { Text("Canceladas") }
-                )
+                item {
+                    FilterChip(
+                        selected = selectedFilter == null,
+                        onClick = { selectedFilter = null },
+                        label = { Text("Todas") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
+                }
+                item {
+                    FilterChip(
+                        selected = selectedFilter == AppointmentStatus.CONFIRMED,
+                        onClick = { selectedFilter = AppointmentStatus.CONFIRMED },
+                        label = { Text("Confirmadas") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
+                }
+                item {
+                    FilterChip(
+                        selected = selectedFilter == AppointmentStatus.COMPLETED,
+                        onClick = { selectedFilter = AppointmentStatus.COMPLETED },
+                        label = { Text("Completadas") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
+                }
+                item {
+                    FilterChip(
+                        selected = selectedFilter == AppointmentStatus.CANCELLED,
+                        onClick = { selectedFilter = AppointmentStatus.CANCELLED },
+                        label = { Text("Canceladas") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
+                }
             }
 
             // Contenido principal
             if (appointmentUiState.isLoading) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             } else if (appointmentUiState.error != null && allAppointments.isEmpty()) {
                 Box(
@@ -198,7 +236,8 @@ fun ClientAppointmentsScreen(
                                 if (clientId.isNotEmpty()) {
                                     appointmentViewModel.loadAppointmentsByClient(clientId)
                                 }
-                            }
+                            },
+                            shape = MaterialTheme.shapes.medium
                         ) {
                             Text("Reintentar")
                         }
@@ -243,7 +282,7 @@ fun ClientAppointmentsScreen(
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    contentPadding = PaddingValues(
                         top = 8.dp,
                         bottom = 24.dp
                     )
@@ -251,9 +290,10 @@ fun ClientAppointmentsScreen(
                     groupedAppointments.forEach { (dateLabel, appointmentsForDate) ->
                         item {
                             Text(
-                                text = "📅 $dateLabel",
+                                text = dateLabel,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
                             )
                         }
@@ -285,10 +325,10 @@ private fun ClientAppointmentCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
@@ -313,6 +353,7 @@ private fun ClientAppointmentCard(
                     text = appointment.serviceName.ifBlank { "Servicio" },
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f).padding(start = 12.dp)
                 )
             }
@@ -323,9 +364,11 @@ private fun ClientAppointmentCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text(
-                        text = "📍",
-                        style = MaterialTheme.typography.bodySmall
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = appointment.businessName,
@@ -363,11 +406,11 @@ private fun ClientAppointmentCard(
                 if (appointment.status == AppointmentStatus.CONFIRMED) {
                     OutlinedButton(
                         onClick = onCancel,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = MaterialTheme.shapes.small,
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = MaterialTheme.colorScheme.error
                         ),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                        contentPadding = PaddingValues(
                             horizontal = 12.dp,
                             vertical = 4.dp
                         )

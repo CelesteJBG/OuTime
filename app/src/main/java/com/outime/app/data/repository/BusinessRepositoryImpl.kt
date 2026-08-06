@@ -1,6 +1,5 @@
 package com.outime.app.data.repository
 
-import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.outime.app.domain.model.Business
 import com.outime.app.domain.repository.BusinessRepository
@@ -29,23 +28,15 @@ class BusinessRepositoryImpl(
     }
 
     override suspend fun getBusinessByOwnerId(ownerId: String): Result<Business?> = try {
-
-        Log.d("OUTIME", "BUSINESS SEARCH OWNER = $ownerId")
-
         val snapshot = firestore
             .collection(BUSINESSES_COLLECTION)
             .whereEqualTo("ownerId", ownerId)
             .get()
             .await()
 
-        Log.d("OUTIME", "BUSINESS FOUND = ${snapshot.size()}")
-
         val business = snapshot.toObjects(Business::class.java).firstOrNull()
 
-        Log.d("OUTIME", "BUSINESS = $business")
-
         Result.success(business)
-
     } catch (e: Exception) {
         Result.failure(e)
     }

@@ -1,5 +1,6 @@
 package com.outime.app.presentation.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Search
@@ -27,6 +27,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -110,6 +111,7 @@ fun ClientHomeScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
@@ -123,9 +125,10 @@ fun ClientHomeScreen(
                         .padding(top = 16.dp, bottom = 8.dp)
                 ) {
                     Text(
-                        text = "Hola, $greetingName 👋",
+                        text = "Hola, $greetingName",
                         style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "¿Qué servicio buscas hoy?",
@@ -142,7 +145,7 @@ fun ClientHomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 4.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = MaterialTheme.shapes.medium,
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     ),
@@ -193,10 +196,12 @@ fun ClientHomeScreen(
                         )
                     },
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = MaterialTheme.shapes.medium,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 )
             }
@@ -207,6 +212,7 @@ fun ClientHomeScreen(
                     text = "Categorías",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp)
                 )
 
@@ -228,7 +234,13 @@ fun ClientHomeScreen(
                                     if (category == "Todas") null else category
                                 )
                             },
-                            label = { Text(text = category) }
+                            label = { Text(text = category) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         )
                     }
                 }
@@ -242,6 +254,7 @@ fun ClientHomeScreen(
                     text = "Destacados",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
                 )
 
@@ -249,9 +262,9 @@ fun ClientHomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = MaterialTheme.shapes.large,
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
                     ),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
@@ -264,7 +277,7 @@ fun ClientHomeScreen(
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
                             modifier = Modifier.size(36.dp)
                         )
                         Spacer(modifier = Modifier.width(16.dp))
@@ -273,12 +286,12 @@ fun ClientHomeScreen(
                                 text = "Negocios verificados",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                             Text(
                                 text = "Todos los negocios en OuTime están verificados y listos para atenderte.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                         }
                     }
@@ -293,6 +306,7 @@ fun ClientHomeScreen(
                     text = "Negocios",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
                 )
             }
@@ -305,7 +319,9 @@ fun ClientHomeScreen(
                             .padding(32.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             } else if (uiState.error != null) {
@@ -320,6 +336,7 @@ fun ClientHomeScreen(
                     Button(
                         onClick = { businessCatalogViewModel.loadBusinesses() },
                         modifier = Modifier.padding(horizontal = 16.dp),
+                        shape = MaterialTheme.shapes.medium,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )

@@ -144,6 +144,9 @@ fun AppNavGraph() {
         composable(Routes.REGISTER) {
             RegisterScreen(
                 authViewModel = authViewModel,
+                onBack = {
+                    navController.popBackStack()
+                },
                 onRegisterSuccess = {
                     navController.navigate(Routes.SPLASH) {
                         popUpTo(Routes.REGISTER) { inclusive = true }
@@ -274,6 +277,7 @@ fun AppNavGraph() {
                     navController.navigate(Routes.BUSINESS_APPOINTMENTS)
                 },
                 onLogout = {
+                    authViewModel.logout()
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0)
                     }

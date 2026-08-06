@@ -1,6 +1,6 @@
 package com.outime.app.presentation.screens
 
-import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -147,7 +147,6 @@ fun BookingScreen(
                 set(Calendar.MILLISECOND, 999)
             }.timeInMillis
 
-            Log.d("BookingScreen", "Fecha cambiada → cargar citas del día")
             appointmentViewModel.loadAppointmentsByBusinessAndDate(businessId, startOfDay, endOfDay)
         } else {
             timeSlots = emptyList()
@@ -175,14 +174,12 @@ fun BookingScreen(
                 existingAppointments = appointmentUiState.dayAppointments
             )
             timeSlots = slots
-            Log.d("BookingScreen", "Franjas regeneradas → ${slots.size} total, ${slots.count { it.isAvailable }} disponibles")
         }
     }
 
     // 3) Reaccionar al éxito de la reserva: Snackbar + recarga de citas
     LaunchedEffect(appointmentUiState.isSuccess) {
         if (appointmentUiState.isSuccess) {
-            Log.d("BookingScreen", "isSuccess=true → mostrar Snackbar y recargar citas")
             scope.launch {
                 snackbarHostState.showSnackbar("Cita confirmada")
             }
@@ -215,7 +212,6 @@ fun BookingScreen(
     // 4) Reaccionar a errores
     LaunchedEffect(appointmentUiState.error) {
         appointmentUiState.error?.let { errorMsg ->
-            Log.e("BookingScreen", "Error en UI: $errorMsg")
             scope.launch {
                 snackbarHostState.showSnackbar("Error: $errorMsg")
             }
@@ -226,7 +222,14 @@ fun BookingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Reservar cita") },
+                title = {
+                    Text(
+                        text = "Reservar cita",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -246,6 +249,7 @@ fun BookingScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
         ) {
             Column(
@@ -257,9 +261,10 @@ fun BookingScreen(
                 // Resumen del negocio y servicio
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    shape = MaterialTheme.shapes.large,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 ) {
                     Column(
@@ -271,17 +276,18 @@ fun BookingScreen(
                         Text(
                             text = businessName,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Text(
                             text = serviceName,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Text(
                             text = "Duración: $durationMinutes min",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
@@ -289,7 +295,11 @@ fun BookingScreen(
                 // Calendario
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    shape = MaterialTheme.shapes.large,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
                 ) {
                     DatePicker(
                         state = datePickerState,
@@ -303,7 +313,8 @@ fun BookingScreen(
                         CircularProgressIndicator(
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally)
-                                .padding(16.dp)
+                                .padding(16.dp),
+                            color = MaterialTheme.colorScheme.primary
                         )
                     } else if (timeSlots.isEmpty()) {
                         Text(
@@ -317,7 +328,8 @@ fun BookingScreen(
                             Text(
                                 text = "Franjas disponibles",
                                 style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(8.dp))
 
@@ -332,7 +344,6 @@ fun BookingScreen(
                                         timeSlot = slot,
                                         isSelected = false,
                                         onClick = {
-                                            Log.d("BookingScreen", "Franja pulsada: ${slot.startMillis} (disponible=${slot.isAvailable})")
                                             if (slot.isAvailable) {
                                                 appointmentViewModel.createAppointment(
                                                     clientId = clientId,
@@ -354,7 +365,8 @@ fun BookingScreen(
 
             if (appointmentUiState.isLoading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier.align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }

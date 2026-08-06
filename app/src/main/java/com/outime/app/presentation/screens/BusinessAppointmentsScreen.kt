@@ -1,5 +1,6 @@
 package com.outime.app.presentation.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -25,6 +25,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -112,7 +113,14 @@ fun BusinessAppointmentsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mis citas") },
+                title = {
+                    Text(
+                        text = "Mis citas",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -132,6 +140,7 @@ fun BusinessAppointmentsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
         ) {
             // Filtros
@@ -144,33 +153,50 @@ fun BusinessAppointmentsScreen(
                 FilterChip(
                     selected = selectedFilter == null,
                     onClick = { selectedFilter = null },
-                    label = { Text("Todas") }
+                    label = { Text("Todas") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 )
                 FilterChip(
                     selected = selectedFilter == AppointmentStatus.CONFIRMED,
                     onClick = { selectedFilter = AppointmentStatus.CONFIRMED },
-                    label = { Text("Confirmadas") }
+                    label = { Text("Confirmadas") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 )
                 FilterChip(
                     selected = selectedFilter == AppointmentStatus.COMPLETED,
                     onClick = { selectedFilter = AppointmentStatus.COMPLETED },
-                    label = { Text("Completadas") }
+                    label = { Text("Completadas") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 )
                 FilterChip(
                     selected = selectedFilter == AppointmentStatus.CANCELLED,
                     onClick = { selectedFilter = AppointmentStatus.CANCELLED },
-                    label = { Text("Canceladas") }
+                    label = { Text("Canceladas") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 )
             }
 
             // Contenido principal
             if (appointmentUiState.isLoading) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             } else if (appointmentUiState.error != null && allAppointments.isEmpty()) {
                 Box(
@@ -199,7 +225,8 @@ fun BusinessAppointmentsScreen(
                                 if (businessId.isNotEmpty()) {
                                     appointmentViewModel.loadAppointmentsByBusiness(businessId)
                                 }
-                            }
+                            },
+                            shape = MaterialTheme.shapes.medium
                         ) {
                             Text("Reintentar")
                         }
@@ -252,9 +279,10 @@ fun BusinessAppointmentsScreen(
                     groupedAppointments.forEach { (dateLabel, appointmentsForDate) ->
                         item {
                             Text(
-                                text = "📅 $dateLabel",
+                                text = dateLabel,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
                             )
                         }
@@ -293,10 +321,10 @@ private fun BusinessAppointmentCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
@@ -321,6 +349,7 @@ private fun BusinessAppointmentCard(
                     text = appointment.serviceName.ifBlank { "Servicio" },
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f).padding(start = 12.dp)
                 )
             }
@@ -365,7 +394,7 @@ private fun BusinessAppointmentCard(
                     ) {
                         OutlinedButton(
                             onClick = onMarkCompleted,
-                            shape = RoundedCornerShape(8.dp),
+                            shape = MaterialTheme.shapes.small,
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(
                                 horizontal = 12.dp,
                                 vertical = 4.dp
@@ -381,7 +410,7 @@ private fun BusinessAppointmentCard(
                         }
                         OutlinedButton(
                             onClick = onCancel,
-                            shape = RoundedCornerShape(8.dp),
+                            shape = MaterialTheme.shapes.small,
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = MaterialTheme.colorScheme.error
                             ),

@@ -1,5 +1,6 @@
 package com.outime.app.presentation.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,10 +28,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -153,7 +156,12 @@ fun ScheduleManagementScreen(
                     onValueChange = { blockedReason = it },
                     label = { Text("Motivo (opcional)") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.medium,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                    )
                 )
             }
         }
@@ -162,7 +170,14 @@ fun ScheduleManagementScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Gestionar disponibilidad") },
+                title = {
+                    Text(
+                        text = "Gestionar disponibilidad",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -182,13 +197,15 @@ fun ScheduleManagementScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
         ) {
             val schedule = editableSchedule
 
             if (uiState.isLoading && schedule == null) {
                 CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier.align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.primary
                 )
             } else if (schedule != null) {
                 LazyColumn(
@@ -203,7 +220,8 @@ fun ScheduleManagementScreen(
                         Text(
                             text = "Horario semanal",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "Activa los días y configura los turnos que necesites",
@@ -240,7 +258,8 @@ fun ScheduleManagementScreen(
                         Text(
                             text = "Fechas bloqueadas",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "Vacaciones, festivos o días no disponibles",
@@ -276,9 +295,10 @@ fun ScheduleManagementScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedButton(
                             onClick = { showBlockedDatePicker = true },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.medium
                         ) {
-                            Text("📅  Añadir fecha bloqueada")
+                            Text("Añadir fecha bloqueada")
                         }
                     }
 
@@ -292,6 +312,7 @@ fun ScheduleManagementScreen(
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.medium,
                             enabled = !uiState.isLoading
                         ) {
                             Text("Guardar disponibilidad")
@@ -303,7 +324,8 @@ fun ScheduleManagementScreen(
 
             if (uiState.isLoading && editableSchedule != null) {
                 CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier.align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -318,6 +340,7 @@ private fun DayScheduleCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (daySchedule.isOpen)
@@ -341,13 +364,20 @@ private fun DayScheduleCard(
                 Text(
                     text = dayName,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Switch(
                     checked = daySchedule.isOpen,
                     onCheckedChange = { isOpen ->
                         onDayChange(daySchedule.copy(isOpen = isOpen))
-                    }
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 )
             }
 
@@ -402,6 +432,11 @@ private fun TurnoEditor(
                 placeholder = { Text("09:00") },
                 modifier = Modifier.weight(1f),
                 singleLine = true,
+                shape = MaterialTheme.shapes.small,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
             OutlinedTextField(
@@ -411,6 +446,11 @@ private fun TurnoEditor(
                 placeholder = { Text("14:00") },
                 modifier = Modifier.weight(1f),
                 singleLine = true,
+                shape = MaterialTheme.shapes.small,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
         }
@@ -426,7 +466,11 @@ private fun BlockedDateItem(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(
             modifier = Modifier
@@ -439,7 +483,8 @@ private fun BlockedDateItem(
                 Text(
                     text = dateFormatter.format(blockedDate.date),
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (blockedDate.reason.isNotBlank()) {
                     Text(

@@ -76,9 +76,6 @@ class AuthRepositoryImpl(
                 .get()
                 .await()
 
-            android.util.Log.d("OUTIME", "EXISTS = ${snapshot.exists()}")
-            android.util.Log.d("OUTIME", "DATA = ${snapshot.data}")
-
             snapshot.toObject(User::class.java)
         } catch (e: Exception) {
             null

@@ -1,5 +1,6 @@
 package com.outime.app.presentation.components
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -8,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.outime.app.presentation.model.TimeSlot
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -15,9 +17,9 @@ import java.util.Locale
 /**
  * Botón que representa una franja horaria en la cuadrícula de reserva.
  *
- * - 🟢 Disponible: fondo verde claro, clickable.
- * - 🔴 Ocupada: fondo rojo claro, no clickable.
- * - Seleccionada: fondo verde intenso.
+ * - Disponible: fondo secondaryContainer, clickable.
+ * - Ocupada: fondo errorContainer, no clickable.
+ * - Seleccionada: fondo primary.
  */
 @Composable
 fun TimeSlotItem(
@@ -31,19 +33,21 @@ fun TimeSlotItem(
     val containerColor = when {
         !timeSlot.isAvailable -> MaterialTheme.colorScheme.errorContainer
         isSelected -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.primaryContainer
+        else -> MaterialTheme.colorScheme.secondaryContainer
     }
 
     val contentColor = when {
         !timeSlot.isAvailable -> MaterialTheme.colorScheme.onErrorContainer
         isSelected -> MaterialTheme.colorScheme.onPrimary
-        else -> MaterialTheme.colorScheme.onPrimaryContainer
+        else -> MaterialTheme.colorScheme.onSecondaryContainer
     }
 
     Button(
         onClick = onClick,
         enabled = timeSlot.isAvailable,
         modifier = modifier,
+        shape = MaterialTheme.shapes.small,
+        contentPadding = PaddingValues(vertical = 10.dp, horizontal = 12.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,

@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <!-- OuTime Design System — ForestGreen -->
+    <color name="forest_primary">#FF2F5D50</color>
+    <color name="forest_primary_light">#FF3D7A69</color>
+    <color name="forest_secondary">#FF6E9F87</color>
+    <color name="forest_accent">#FFC9823A</color>
+    <color name="forest_background">#FFF9F7F2</color>
+    <color name="forest_surface">#FFFFFFFF</color>
+    <color name="forest_error">#FFC54B4B</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>

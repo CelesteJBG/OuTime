@@ -1,28 +1,49 @@
 package com.outime.app.presentation.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.outime.app.presentation.viewmodel.BusinessViewModel
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateBusinessScreen(
     businessViewModel: BusinessViewModel,
@@ -35,6 +56,9 @@ fun CreateBusinessScreen(
     var description by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
             businessViewModel.resetState()
@@ -42,80 +66,145 @@ fun CreateBusinessScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Crear negocio",
-            fontSize = 22.sp
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Nombre del negocio") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = description,
-            onValueChange = { description = it },
-            label = { Text("Descripción") },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3,
-            maxLines = 5
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = category,
-            onValueChange = { category = it },
-            label = { Text("Categoría") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        if (uiState.error != null) {
-            Text(
-                text = uiState.error ?: "",
-                color = Color.Red,
-                fontSize = 14.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { errorMsg ->
+            scope.launch {
+                snackbarHostState.showSnackbar("No se pudo crear el negocio.")
+            }
+            businessViewModel.resetState()
         }
+    }
 
-        Button(
-            onClick = {
-                businessViewModel.createBusiness(
-                    ownerId = ownerId,
-                    name = name,
-                    description = description,
-                    category = category
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Crear negocio",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBusinessCreated) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !uiState.isLoading && name.isNotBlank()
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(innerPadding)
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Nombre del negocio") },
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Store,
+                            contentDescription = null
+                        )
+                    },
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.medium,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Descripción") },
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = null
+                        )
+                    },
+                    minLines = 3,
+                    maxLines = 5,
+                    shape = MaterialTheme.shapes.medium,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+
+                OutlinedTextField(
+                    value = category,
+                    onValueChange = { category = it },
+                    label = { Text("Categoría") },
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Category,
+                            contentDescription = null
+                        )
+                    },
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.medium,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = {
+                        businessViewModel.createBusiness(
+                            ownerId = ownerId,
+                            name = name,
+                            description = description,
+                            category = category
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    enabled = !uiState.isLoading && name.isNotBlank()
+                ) {
+                    Text("Crear negocio")
+                }
+            }
+
             if (uiState.isLoading) {
                 CircularProgressIndicator(
-                    color = Color.White,
-                    strokeWidth = 2.dp,
-                    modifier = Modifier
-                        .height(20.dp)
-                        .padding(end = 8.dp)
+                    modifier = Modifier.align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
-            Text("Crear negocio")
         }
     }
 }
