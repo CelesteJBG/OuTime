@@ -1,19 +1,24 @@
 package com.outime.app.presentation.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -24,9 +29,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -37,10 +39,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.outime.app.R
 import com.outime.app.presentation.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
 
@@ -75,20 +80,6 @@ fun LoginScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Iniciar sesión",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
 
@@ -101,23 +92,40 @@ fun LoginScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp, vertical = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(start = 32.dp, end = 32.dp, top = 95.dp, bottom = 64.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "OuTime",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                // ── Branding ──
+                Image(
+                    painter = painterResource(R.drawable.outime_logo_horizontal),
+                    contentDescription = "OuTime",
+                    modifier = Modifier.size(width = 281.dp, height = 100.dp),
+                    contentScale = ContentScale.Fit
                 )
+
+                //Spacer(Modifier.height(95.dp))
+                Spacer(Modifier.weight(1.5f))
+
+                Text(
+                    text = "Iniciar sesión",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(4.dp))
+
                 Text(
                     text = "Reserva tu cita en segundos",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(Modifier.weight(0.5f))
 
+                // ── Form ──
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -139,6 +147,8 @@ fun LoginScreen(
                     ),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                 )
+
+                Spacer(Modifier.height(10.dp))
 
                 OutlinedTextField(
                     value = password,
@@ -163,8 +173,26 @@ fun LoginScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
 
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        text = "¿Olvidaste contraseña?",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier.clickable {
+                            // TODO: Navigate to forgot password screen
+                        }
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                // ── CTA ──
                 Button(
                     onClick = {
                         authViewModel.login(
@@ -176,16 +204,34 @@ fun LoginScreen(
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = MaterialTheme.shapes.medium,
-                    enabled = !uiState.isLoading && email.isNotBlank() && password.isNotBlank()
+                    enabled = !uiState.isLoading && email.isNotBlank() && password.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(
+                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                        disabledContentColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
+                    )
                 ) {
                     Text("Iniciar sesión")
                 }
 
-                TextButton(
-                    onClick = onNavigateToRegister,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                Spacer(Modifier.weight(2f))
+
+                // ── Register ──
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    Text("¿No tienes cuenta? Regístrate")
+                    Text(
+                        text = "¿No tienes cuenta? ",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Regístrate",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.clickable { onNavigateToRegister() }
+                    )
                 }
             }
 

@@ -1,10 +1,15 @@
 package com.outime.app.presentation.navigation
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.firebase.auth.FirebaseAuth
@@ -14,12 +19,16 @@ import com.outime.app.data.repository.AuthRepositoryImpl
 import com.outime.app.data.repository.BusinessRepositoryImpl
 import com.outime.app.data.repository.ScheduleRepositoryImpl
 import com.outime.app.data.repository.ServiceRepositoryImpl
+import com.outime.app.presentation.components.OuTimeBottomNavigation
 import com.outime.app.presentation.screens.BookingScreen
 import com.outime.app.presentation.screens.BusinessAppointmentsScreen
 import com.outime.app.presentation.screens.BusinessDetailScreen
 import com.outime.app.presentation.screens.BusinessHomeScreen
+import com.outime.app.presentation.screens.BusinessProfileScreen
+import com.outime.app.presentation.screens.BusinessServicesScreen
 import com.outime.app.presentation.screens.ClientAppointmentsScreen
 import com.outime.app.presentation.screens.ClientHomeScreen
+import com.outime.app.presentation.screens.ClientProfileScreen
 import com.outime.app.presentation.screens.CreateBusinessScreen
 import com.outime.app.presentation.screens.CreateServiceScreen
 import com.outime.app.presentation.screens.LoginScreen
@@ -89,257 +98,354 @@ fun AppNavGraph() {
         factory = ScheduleViewModelFactory(scheduleRepository)
     )
 
-    NavHost(
-        navController = navController,
-        startDestination = Routes.SPLASH
-    ) {
+    // ── Track current route for Bottom Navigation ──────────────────
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
 
-        composable(Routes.SPLASH) {
-            SplashScreen(
-                authViewModel = authViewModel,
-                businessViewModel = businessViewModel,
+    // Determine if bottom bar should be visible and which items to show
+    val isBusinessMain = currentRoute in businessMainRoutes
+    val isClientMain = currentRoute in clientMainRoutes
+    val showBottomBar = isBusinessMain || isClientMain
 
-                onNavigateToLogin = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.SPLASH) { inclusive = true }
-                    }
-                },
+    val navItems = when {
+        isBusinessMain -> businessNavItems()
+        isClientMain -> clientNavItems()
+        else -> emptyList()
+    }
 
-                onNavigateToClientHome = {
-                    navController.navigate(Routes.CLIENT_HOME) {
-                        popUpTo(Routes.SPLASH) { inclusive = true }
-                    }
-                },
+    // Home route for tab navigation (popUpTo target)
+    val homeRoute = when {
+        isBusinessMain -> Routes.BUSINESS_HOME
+        isClientMain -> Routes.CLIENT_HOME
+        else -> Routes.SPLASH
+    }
 
-                onNavigateToBusinessHome = {
-                    navController.navigate(Routes.BUSINESS_HOME) {
-                        popUpTo(Routes.SPLASH) { inclusive = true }
-                    }
-                },
-
-                onNavigateToCreateBusiness = {
-                    navController.navigate(Routes.CREATE_BUSINESS) {
-                        popUpTo(Routes.SPLASH) { inclusive = true }
-                    }
-                }
-            )
-        }
-
-        composable(Routes.LOGIN) {
-            LoginScreen(
-                authViewModel = authViewModel,
-                onLoginSuccess = {
-                    navController.navigate(Routes.SPLASH) {
-                        popUpTo(Routes.LOGIN) {
-                            inclusive = true
+    // ── Scaffold with Bottom Navigation ───────────────────────────
+    Scaffold(
+        bottomBar = {
+            if (showBottomBar && navItems.isNotEmpty()) {
+                OuTimeBottomNavigation(
+                    items = navItems,
+                    currentRoute = currentRoute,
+                    onNavigate = { route ->
+                        if (route != currentRoute) {
+                            navController.navigate(route) {
+                                popUpTo(homeRoute) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     }
-                },
-                onNavigateToRegister = {
-                    navController.navigate(Routes.REGISTER)
-                }
-            )
+                )
+            }
         }
+    ) { innerPadding ->
 
-        composable(Routes.REGISTER) {
-            RegisterScreen(
-                authViewModel = authViewModel,
-                onBack = {
-                    navController.popBackStack()
-                },
-                onRegisterSuccess = {
-                    navController.navigate(Routes.SPLASH) {
-                        popUpTo(Routes.REGISTER) { inclusive = true }
+        NavHost(
+            navController = navController,
+            startDestination = Routes.SPLASH,
+            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
+        ) {
+
+            composable(Routes.SPLASH) {
+                SplashScreen(
+                    authViewModel = authViewModel,
+                    businessViewModel = businessViewModel,
+
+                    onNavigateToLogin = {
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(Routes.SPLASH) { inclusive = true }
+                        }
+                    },
+
+                    onNavigateToClientHome = {
+                        navController.navigate(Routes.CLIENT_HOME) {
+                            popUpTo(Routes.SPLASH) { inclusive = true }
+                        }
+                    },
+
+                    onNavigateToBusinessHome = {
+                        navController.navigate(Routes.BUSINESS_HOME) {
+                            popUpTo(Routes.SPLASH) { inclusive = true }
+                        }
+                    },
+
+                    onNavigateToCreateBusiness = {
+                        navController.navigate(Routes.CREATE_BUSINESS) {
+                            popUpTo(Routes.SPLASH) { inclusive = true }
+                        }
                     }
-                }
-            )
-        }
+                )
+            }
 
-        composable(Routes.CLIENT_HOME) {
-            ClientHomeScreen(
-                businessCatalogViewModel = businessCatalogViewModel,
-                authViewModel = authViewModel,
-                onNavigateToDetail = { businessId ->
-                    navController.navigate(Routes.businessDetail(businessId))
-                },
-                onNavigateToClientAppointments = {
-                    navController.navigate(Routes.CLIENT_APPOINTMENTS)
-                },
-                onLogout = {
-                    authViewModel.logout()
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0)
+            composable(Routes.LOGIN) {
+                LoginScreen(
+                    authViewModel = authViewModel,
+                    onLoginSuccess = {
+                        navController.navigate(Routes.SPLASH) {
+                            popUpTo(Routes.LOGIN) {
+                                inclusive = true
+                            }
+                        }
+                    },
+                    onNavigateToRegister = {
+                        navController.navigate(Routes.REGISTER)
                     }
-                }
-            )
-        }
+                )
+            }
 
-        composable(
-            route = Routes.BUSINESS_DETAIL,
-            arguments = listOf(
-                navArgument("businessId") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val businessId = backStackEntry.arguments?.getString("businessId") ?: ""
-            BusinessDetailScreen(
-                businessId = businessId,
-                businessCatalogViewModel = businessCatalogViewModel,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onReserveClick = { serviceId, serviceName, durationMinutes ->
-                    val business = businessCatalogViewModel.uiState.value.selectedBusiness
-                    val clientId = authViewModel.currentUserId() ?: ""
-                    if (business != null && clientId.isNotBlank()) {
-                        navController.navigate(
-                            Routes.booking(
-                                businessId = businessId,
-                                serviceId = serviceId,
-                                businessName = business.name,
-                                serviceName = serviceName,
-                                clientId = clientId,
-                                durationMinutes = durationMinutes
+            composable(Routes.REGISTER) {
+                RegisterScreen(
+                    authViewModel = authViewModel,
+                    onBack = {
+                        navController.popBackStack()
+                    },
+                    onRegisterSuccess = {
+                        navController.navigate(Routes.SPLASH) {
+                            popUpTo(Routes.REGISTER) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            // ── CLIENT main routes ───────────────────────────────────
+
+            composable(Routes.CLIENT_HOME) {
+                ClientHomeScreen(
+                    businessCatalogViewModel = businessCatalogViewModel,
+                    authViewModel = authViewModel,
+                    onNavigateToDetail = { businessId ->
+                        navController.navigate(Routes.businessDetail(businessId))
+                    }
+                )
+            }
+
+            composable(Routes.CLIENT_APPOINTMENTS) {
+                val clientId = authViewModel.currentUserId() ?: ""
+                ClientAppointmentsScreen(
+                    clientId = clientId,
+                    appointmentViewModel = appointmentViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(Routes.CLIENT_PROFILE) {
+                ClientProfileScreen(
+                    authViewModel = authViewModel,
+                    onNavigateToAppointments = {
+                        navController.navigate(Routes.CLIENT_APPOINTMENTS) {
+                            popUpTo(Routes.CLIENT_HOME) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onLogout = {
+                        authViewModel.logout()
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(0)
+                        }
+                    }
+                )
+            }
+
+            // ── BUSINESS main routes ────────────────────────────────
+
+            composable(Routes.BUSINESS_HOME) {
+
+                BusinessHomeScreen(
+                    serviceViewModel = serviceViewModel,
+                    businessViewModel = businessViewModel,
+                    onNavigateToCreateService = {
+                        navController.navigate(Routes.CREATE_SERVICE)
+                    }
+                )
+            }
+
+            composable(Routes.BUSINESS_APPOINTMENTS) {
+                val businessId = businessViewModel.currentBusinessId() ?: ""
+                BusinessAppointmentsScreen(
+                    businessId = businessId,
+                    appointmentViewModel = appointmentViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(Routes.BUSINESS_SERVICES) {
+                val businessId = businessViewModel.currentBusinessId() ?: ""
+                BusinessServicesScreen(
+                    businessId = businessId,
+                    serviceViewModel = serviceViewModel,
+                    onNavigateToCreateService = {
+                        navController.navigate(Routes.CREATE_SERVICE)
+                    }
+                )
+            }
+
+            composable(Routes.SCHEDULE_MANAGEMENT) {
+                val businessId = businessViewModel.currentBusinessId() ?: ""
+                ScheduleManagementScreen(
+                    businessId = businessId,
+                    scheduleViewModel = scheduleViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(Routes.BUSINESS_PROFILE) {
+                BusinessProfileScreen(
+                    authViewModel = authViewModel,
+                    businessViewModel = businessViewModel,
+                    serviceViewModel = serviceViewModel,
+                    onNavigateToServices = {
+                        navController.navigate(Routes.BUSINESS_SERVICES) {
+                            popUpTo(Routes.BUSINESS_HOME) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onNavigateToSchedule = {
+                        navController.navigate(Routes.SCHEDULE_MANAGEMENT) {
+                            popUpTo(Routes.BUSINESS_HOME) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onLogout = {
+                        authViewModel.logout()
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(0)
+                        }
+                    }
+                )
+            }
+
+            // ── Detail / Booking routes (no bottom bar) ─────────────
+
+            composable(
+                route = Routes.BUSINESS_DETAIL,
+                arguments = listOf(
+                    navArgument("businessId") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val businessId = backStackEntry.arguments?.getString("businessId") ?: ""
+                BusinessDetailScreen(
+                    businessId = businessId,
+                    businessCatalogViewModel = businessCatalogViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onReserveClick = { serviceId, serviceName, durationMinutes ->
+                        val business = businessCatalogViewModel.uiState.value.selectedBusiness
+                        val clientId = authViewModel.currentUserId() ?: ""
+                        if (business != null && clientId.isNotBlank()) {
+                            navController.navigate(
+                                Routes.booking(
+                                    businessId = businessId,
+                                    serviceId = serviceId,
+                                    businessName = business.name,
+                                    serviceName = serviceName,
+                                    clientId = clientId,
+                                    durationMinutes = durationMinutes
+                                )
                             )
-                        )
+                        }
                     }
-                }
-            )
-        }
+                )
+            }
 
-        composable(
-            route = Routes.BOOKING,
-            arguments = listOf(
-                navArgument("businessId") { type = NavType.StringType },
-                navArgument("serviceId") { type = NavType.StringType },
-                navArgument("businessName") {
-                    type = NavType.StringType
-                    defaultValue = ""
-                },
-                navArgument("serviceName") {
-                    type = NavType.StringType
-                    defaultValue = ""
-                },
-                navArgument("clientId") {
-                    type = NavType.StringType
-                    defaultValue = ""
-                },
-                navArgument("durationMinutes") {
-                    type = NavType.IntType
-                    defaultValue = 30
-                }
-            )
-        ) { backStackEntry ->
-            val args = backStackEntry.arguments
-            val businessId = args?.getString("businessId") ?: ""
-            val serviceId = args?.getString("serviceId") ?: ""
-            val businessName = java.net.URLDecoder.decode(
-                args?.getString("businessName") ?: "", "UTF-8"
-            )
-            val serviceName = java.net.URLDecoder.decode(
-                args?.getString("serviceName") ?: "", "UTF-8"
-            )
-            val clientId = args?.getString("clientId") ?: ""
-            val durationMinutes = args?.getInt("durationMinutes") ?: 30
-
-            BookingScreen(
-                clientId = clientId,
-                businessId = businessId,
-                businessName = businessName,
-                serviceId = serviceId,
-                serviceName = serviceName,
-                durationMinutes = durationMinutes,
-                appointmentViewModel = appointmentViewModel,
-                scheduleViewModel = scheduleViewModel,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onBookingSuccess = {
-                    navController.navigate(Routes.CLIENT_HOME) {
-                        popUpTo(Routes.CLIENT_HOME) { inclusive = true }
+            composable(
+                route = Routes.BOOKING,
+                arguments = listOf(
+                    navArgument("businessId") { type = NavType.StringType },
+                    navArgument("serviceId") { type = NavType.StringType },
+                    navArgument("businessName") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    },
+                    navArgument("serviceName") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    },
+                    navArgument("clientId") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    },
+                    navArgument("durationMinutes") {
+                        type = NavType.IntType
+                        defaultValue = 30
                     }
-                }
-            )
-        }
+                )
+            ) { backStackEntry ->
+                val args = backStackEntry.arguments
+                val businessId = args?.getString("businessId") ?: ""
+                val serviceId = args?.getString("serviceId") ?: ""
+                val businessName = java.net.URLDecoder.decode(
+                    args?.getString("businessName") ?: "", "UTF-8"
+                )
+                val serviceName = java.net.URLDecoder.decode(
+                    args?.getString("serviceName") ?: "", "UTF-8"
+                )
+                val clientId = args?.getString("clientId") ?: ""
+                val durationMinutes = args?.getInt("durationMinutes") ?: 30
 
-        composable(Routes.BUSINESS_HOME) {
-
-            BusinessHomeScreen(
-                authViewModel = authViewModel,
-                serviceViewModel = serviceViewModel,
-                businessViewModel = businessViewModel,
-                onNavigateToCreateService = {
-                    navController.navigate(Routes.CREATE_SERVICE)
-                },
-                onNavigateToScheduleManagement = {
-                    navController.navigate(Routes.SCHEDULE_MANAGEMENT)
-                },
-                onNavigateToBusinessAppointments = {
-                    navController.navigate(Routes.BUSINESS_APPOINTMENTS)
-                },
-                onLogout = {
-                    authViewModel.logout()
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0)
+                BookingScreen(
+                    clientId = clientId,
+                    businessId = businessId,
+                    businessName = businessName,
+                    serviceId = serviceId,
+                    serviceName = serviceName,
+                    durationMinutes = durationMinutes,
+                    appointmentViewModel = appointmentViewModel,
+                    scheduleViewModel = scheduleViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onBookingSuccess = {
+                        navController.navigate(Routes.CLIENT_HOME) {
+                            popUpTo(Routes.CLIENT_HOME) { inclusive = true }
+                        }
                     }
-                }
-            )
-        }
+                )
+            }
 
-        composable(Routes.SCHEDULE_MANAGEMENT) {
-            val businessId = businessViewModel.currentBusinessId() ?: ""
-            ScheduleManagementScreen(
-                businessId = businessId,
-                scheduleViewModel = scheduleViewModel,
-                onNavigateBack = {
-                    navController.popBackStack()
-                }
-            )
-        }
+            // ── Create routes (no bottom bar) ────────────────────────
 
-        composable(Routes.BUSINESS_APPOINTMENTS) {
-            val businessId = businessViewModel.currentBusinessId() ?: ""
-            BusinessAppointmentsScreen(
-                businessId = businessId,
-                appointmentViewModel = appointmentViewModel,
-                onNavigateBack = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable(Routes.CLIENT_APPOINTMENTS) {
-            val clientId = authViewModel.currentUserId() ?: ""
-            ClientAppointmentsScreen(
-                clientId = clientId,
-                appointmentViewModel = appointmentViewModel,
-                onNavigateBack = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable(Routes.CREATE_BUSINESS) {
-            val ownerId = authViewModel.currentUserId() ?: ""
-            CreateBusinessScreen(
-                businessViewModel = businessViewModel,
-                ownerId = ownerId,
-                onBusinessCreated = {
-                    navController.navigate(Routes.BUSINESS_HOME) {
-                        popUpTo(Routes.CREATE_BUSINESS) { inclusive = true }
+            composable(Routes.CREATE_BUSINESS) {
+                val ownerId = authViewModel.currentUserId() ?: ""
+                CreateBusinessScreen(
+                    businessViewModel = businessViewModel,
+                    ownerId = ownerId,
+                    onBusinessCreated = {
+                        navController.navigate(Routes.BUSINESS_HOME) {
+                            popUpTo(Routes.CREATE_BUSINESS) { inclusive = true }
+                        }
                     }
-                }
-            )
-        }
+                )
+            }
 
-        composable(Routes.CREATE_SERVICE) {
-            val businessId = businessViewModel.currentBusinessId() ?: ""
-            CreateServiceScreen(
-                serviceViewModel = serviceViewModel,
-                businessId = businessId,
-                onBack = {
-                    navController.popBackStack()
-                }
-            )
+            composable(Routes.CREATE_SERVICE) {
+                val businessId = businessViewModel.currentBusinessId() ?: ""
+                CreateServiceScreen(
+                    serviceViewModel = serviceViewModel,
+                    businessId = businessId,
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
         }
     }
 }

@@ -14,6 +14,10 @@ object Routes {
     const val BUSINESS_APPOINTMENTS = "business_appointments"
     const val CLIENT_APPOINTMENTS = "client_appointments"
 
+    const val BUSINESS_SERVICES = "business_services"
+    const val BUSINESS_PROFILE = "business_profile"
+    const val CLIENT_PROFILE = "client_profile"
+
     const val BUSINESS_DETAIL = "business_detail/{businessId}"
 
     fun businessDetail(businessId: String) = "business_detail/$businessId"
