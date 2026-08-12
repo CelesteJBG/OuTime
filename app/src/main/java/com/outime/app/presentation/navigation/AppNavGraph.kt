@@ -261,8 +261,34 @@ fun AppNavGraph() {
                 BusinessHomeScreen(
                     serviceViewModel = serviceViewModel,
                     businessViewModel = businessViewModel,
+                    appointmentViewModel = appointmentViewModel,
+                    authViewModel = authViewModel,
                     onNavigateToCreateService = {
                         navController.navigate(Routes.CREATE_SERVICE)
+                    },
+                    onNavigateToBusinessAppointments = {
+                        navController.navigate(Routes.BUSINESS_APPOINTMENTS) {
+                            popUpTo(Routes.BUSINESS_HOME) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onNavigateToBusinessServices = {
+                        navController.navigate(Routes.BUSINESS_SERVICES) {
+                            popUpTo(Routes.BUSINESS_HOME) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onLogout = {
+                        authViewModel.logout()
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(0)
+                        }
                     }
                 )
             }
