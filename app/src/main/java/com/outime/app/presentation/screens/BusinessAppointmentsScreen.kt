@@ -1,23 +1,29 @@
 package com.outime.app.presentation.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EventBusy
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -33,6 +39,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -46,7 +53,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.outime.app.domain.model.Appointment
 import com.outime.app.domain.model.AppointmentStatus
@@ -143,48 +154,68 @@ fun BusinessAppointmentsScreen(
                 .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
         ) {
-            // Filtros
-            Row(
+            // Filtros — fila horizontal desplazable con indicador de scroll
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(bottom = 8.dp)
             ) {
-                FilterChip(
-                    selected = selectedFilter == null,
-                    onClick = { selectedFilter = null },
-                    label = { Text("Todas") },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = selectedFilter == null,
+                        onClick = { selectedFilter = null },
+                        label = { Text("Todas", maxLines = 1) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     )
-                )
-                FilterChip(
-                    selected = selectedFilter == AppointmentStatus.CONFIRMED,
-                    onClick = { selectedFilter = AppointmentStatus.CONFIRMED },
-                    label = { Text("Confirmadas") },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    FilterChip(
+                        selected = selectedFilter == AppointmentStatus.CONFIRMED,
+                        onClick = { selectedFilter = AppointmentStatus.CONFIRMED },
+                        label = { Text("Confirmadas", maxLines = 1) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     )
-                )
-                FilterChip(
-                    selected = selectedFilter == AppointmentStatus.COMPLETED,
-                    onClick = { selectedFilter = AppointmentStatus.COMPLETED },
-                    label = { Text("Completadas") },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    FilterChip(
+                        selected = selectedFilter == AppointmentStatus.COMPLETED,
+                        onClick = { selectedFilter = AppointmentStatus.COMPLETED },
+                        label = { Text("Completadas", maxLines = 1) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     )
-                )
-                FilterChip(
-                    selected = selectedFilter == AppointmentStatus.CANCELLED,
-                    onClick = { selectedFilter = AppointmentStatus.CANCELLED },
-                    label = { Text("Canceladas") },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    FilterChip(
+                        selected = selectedFilter == AppointmentStatus.CANCELLED,
+                        onClick = { selectedFilter = AppointmentStatus.CANCELLED },
+                        label = { Text("Canceladas", maxLines = 1) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     )
+                }
+                // Indicador sutil de scroll horizontal (fade en el borde derecho)
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            Brush.horizontalGradient(
+                                0f to Color.Transparent,
+                                0.85f to Color.Transparent,
+                                1f to MaterialTheme.colorScheme.surface
+                            )
+                        )
                 )
             }
 
@@ -270,8 +301,8 @@ fun BusinessAppointmentsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(
                         top = 8.dp,
                         bottom = 24.dp
                     )
@@ -280,10 +311,10 @@ fun BusinessAppointmentsScreen(
                         item {
                             Text(
                                 text = dateLabel,
-                                style = MaterialTheme.typography.titleSmall,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                                modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
                             )
                         }
                         items(appointmentsForDate) { appointment ->
@@ -333,103 +364,147 @@ private fun BusinessAppointmentCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Fila superior: hora + servicio
+            // Fila superior: hora destacada + chip de estado
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Hora — elemento destacado
                 Text(
                     text = timeFormat.format(appointment.dateTime),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1
                 )
-                Text(
-                    text = appointment.serviceName.ifBlank { "Servicio" },
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f).padding(start = 12.dp)
+                // Estado — chip claramente identificable
+                StatusChip(
+                    label = statusConfig.label,
+                    color = statusConfig.color,
+                    icon = statusConfig.icon
                 )
             }
 
-            // Cliente
+            // Nombre del servicio — segundo nivel
+            Text(
+                text = appointment.serviceName.ifBlank { "Servicio" },
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            // Cliente — información secundaria
             if (appointment.clientId.isNotBlank()) {
-                Text(
-                    text = "Cliente: ${appointment.clientId}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            // Estado (chip visual)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Icon(
-                        imageVector = statusConfig.icon,
+                        imageVector = Icons.Default.Person,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = statusConfig.color
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = statusConfig.label,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = statusConfig.color
+                        text = appointment.clientId,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
+            }
 
-                // Acciones solo si está confirmada
-                if (appointment.status == AppointmentStatus.CONFIRMED) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // Acciones solo si está confirmada
+            if (appointment.status == AppointmentStatus.CONFIRMED) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        onClick = onMarkCompleted,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp),
+                        shape = MaterialTheme.shapes.small,
+                        contentPadding = PaddingValues(
+                            horizontal = 12.dp,
+                            vertical = 4.dp
+                        )
                     ) {
-                        OutlinedButton(
-                            onClick = onMarkCompleted,
-                            shape = MaterialTheme.shapes.small,
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                                horizontal = 12.dp,
-                                vertical = 4.dp
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.size(4.dp))
-                            Text("Completar", style = MaterialTheme.typography.labelSmall)
-                        }
-                        OutlinedButton(
-                            onClick = onCancel,
-                            shape = MaterialTheme.shapes.small,
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
-                            ),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                                horizontal = 12.dp,
-                                vertical = 4.dp
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.size(4.dp))
-                            Text("Cancelar", style = MaterialTheme.typography.labelSmall)
-                        }
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Completar", style = MaterialTheme.typography.labelLarge)
+                    }
+                    OutlinedButton(
+                        onClick = onCancel,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp),
+                        shape = MaterialTheme.shapes.small,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
+                        contentPadding = PaddingValues(
+                            horizontal = 12.dp,
+                            vertical = 4.dp
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Cancelar", style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Chip de estado con icono + texto, fondo sutil y color del estado.
+ * Mejora la accesibilidad al no depender exclusivamente del color.
+ */
+@Composable
+private fun StatusChip(
+    label: String,
+    color: Color,
+    icon: ImageVector
+) {
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        color = color.copy(alpha = 0.12f)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+                tint = color
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = color,
+                maxLines = 1
+            )
         }
     }
 }
