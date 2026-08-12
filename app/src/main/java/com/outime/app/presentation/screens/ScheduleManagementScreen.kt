@@ -4,18 +4,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -172,8 +175,8 @@ fun ScheduleManagementScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Gestionar disponibilidad",
-                        style = MaterialTheme.typography.titleLarge,
+                        text = "Horario semanal",
+                        style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -194,42 +197,51 @@ fun ScheduleManagementScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
 
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
         ) {
+            // ── Zona blanca: subtítulo que extiende el fondo del TopAppBar ──
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 20.dp)
+            ) {
+                Text(
+                    text = "Activa los días y configura los turnos",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            // ── Padding entre la zona blanca y el fondo marfil ──
+            Spacer(modifier = Modifier.height(20.dp))
+
             val schedule = editableSchedule
 
             if (uiState.isLoading && schedule == null) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             } else if (schedule != null) {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        bottom = 32.dp
+                    ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Sección: Horario semanal
-                    item {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Horario semanal",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "Activa los días y configura los turnos que necesites",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
                     val dayNames = listOf(
                         Calendar.MONDAY to "Lunes",
                         Calendar.TUESDAY to "Martes",
@@ -317,16 +329,19 @@ fun ScheduleManagementScreen(
                         ) {
                             Text("Guardar disponibilidad")
                         }
-                        Spacer(modifier = Modifier.height(24.dp))
                     }
                 }
             }
 
             if (uiState.isLoading && editableSchedule != null) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }
@@ -338,24 +353,33 @@ private fun DayScheduleCard(
     daySchedule: DaySchedule,
     onDayChange: (DaySchedule) -> Unit
 ) {
+    val isOpen = daySchedule.isOpen
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (daySchedule.isOpen)
+            containerColor = if (isOpen)
                 MaterialTheme.colorScheme.surface
             else
-                MaterialTheme.colorScheme.surfaceVariant
+                MaterialTheme.colorScheme.background
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = if (isOpen)
+                MaterialTheme.colorScheme.outlineVariant
+            else
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
         )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Switch principal: Abierto/Cerrado
+            // Fila superior: nombre del día + toggle
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -363,14 +387,17 @@ private fun DayScheduleCard(
             ) {
                 Text(
                     text = dayName,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isOpen)
+                        MaterialTheme.colorScheme.onSurface
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Switch(
-                    checked = daySchedule.isOpen,
-                    onCheckedChange = { isOpen ->
-                        onDayChange(daySchedule.copy(isOpen = isOpen))
+                    checked = isOpen,
+                    onCheckedChange = { newIsOpen ->
+                        onDayChange(daySchedule.copy(isOpen = newIsOpen))
                     },
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
@@ -381,19 +408,26 @@ private fun DayScheduleCard(
                 )
             }
 
-            if (daySchedule.isOpen) {
+            // Solo se muestran las franjas si el día está activo
+            if (isOpen) {
+                // Separador sutil entre cabecera del día y sus horarios
+                HorizontalDivider()
+
                 // Turno de mañana
                 TurnoEditor(
-                    label = "Mañana",
+                    label = "MAÑANA",
                     start = daySchedule.morningStart,
                     end = daySchedule.morningEnd,
                     onStartChange = { onDayChange(daySchedule.copy(morningStart = it)) },
                     onEndChange = { onDayChange(daySchedule.copy(morningEnd = it)) }
                 )
 
+                // Separación extra entre MAÑANA y TARDE
+                Spacer(modifier = Modifier.height(4.dp))
+
                 // Turno de tarde
                 TurnoEditor(
-                    label = "Tarde",
+                    label = "TARDE",
                     start = daySchedule.afternoonStart,
                     end = daySchedule.afternoonEnd,
                     onStartChange = { onDayChange(daySchedule.copy(afternoonStart = it)) },
@@ -414,47 +448,97 @@ private fun TurnoEditor(
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        // Etiqueta de franja — separador visual entre mañana y tarde
         Text(
             text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.secondary,
+            letterSpacing = androidx.compose.ui.unit.TextUnit.Unspecified
         )
+
+        // Etiquetas Inicio / Fin
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            OutlinedTextField(
+            Text(
+                text = "Inicio",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = "Fin",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        // Campos de hora
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            TimeField(
                 value = start,
                 onValueChange = onStartChange,
-                label = { Text("Inicio") },
-                placeholder = { Text("09:00") },
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-                shape = MaterialTheme.shapes.small,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                placeholder = "09:00",
+                modifier = Modifier.weight(1f)
             )
-            OutlinedTextField(
+            TimeField(
                 value = end,
                 onValueChange = onEndChange,
-                label = { Text("Fin") },
-                placeholder = { Text("14:00") },
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-                shape = MaterialTheme.shapes.small,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                placeholder = "14:00",
+                modifier = Modifier.weight(1f)
             )
         }
     }
+}
+
+@Composable
+private fun TimeField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder) },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Filled.Schedule,
+                contentDescription = "Hora",
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        modifier = modifier,
+        singleLine = true,
+        shape = MaterialTheme.shapes.small,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+            focusedContainerColor = MaterialTheme.colorScheme.background,
+            unfocusedContainerColor = MaterialTheme.colorScheme.background
+        ),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+    )
+}
+
+@Composable
+private fun HorizontalDivider() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+    )
 }
 
 @Composable
