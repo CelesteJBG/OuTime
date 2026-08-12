@@ -127,7 +127,8 @@ fun BusinessAppointmentsScreen(
                 title = {
                     Text(
                         text = "Mis citas",
-                        style = MaterialTheme.typography.titleLarge,
+                        //style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )

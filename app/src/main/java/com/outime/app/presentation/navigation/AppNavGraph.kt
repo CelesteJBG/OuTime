@@ -311,6 +311,9 @@ fun AppNavGraph() {
                     serviceViewModel = serviceViewModel,
                     onNavigateToCreateService = {
                         navController.navigate(Routes.CREATE_SERVICE)
+                    },
+                    onNavigateBack = {
+                        navController.popBackStack()
                     }
                 )
             }
