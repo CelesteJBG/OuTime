@@ -240,7 +240,7 @@ fun ScheduleManagementScreen(
                         end = 16.dp,
                         bottom = 32.dp
                     ),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     val dayNames = listOf(
                         Calendar.MONDAY to "Lunes",
@@ -358,7 +358,7 @@ private fun DayScheduleCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isOpen)
                 MaterialTheme.colorScheme.surface
