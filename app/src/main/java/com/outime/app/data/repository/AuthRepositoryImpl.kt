@@ -81,4 +81,16 @@ class AuthRepositoryImpl(
             null
         }
     }
+
+    override suspend fun getUserById(userId: String): Result<User?> = try {
+        val snapshot = firestore
+            .collection(USERS_COLLECTION)
+            .document(userId)
+            .get()
+            .await()
+
+        Result.success(snapshot.toObject(User::class.java))
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 }

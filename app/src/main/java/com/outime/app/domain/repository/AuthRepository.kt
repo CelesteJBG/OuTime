@@ -22,4 +22,6 @@ interface AuthRepository {
     fun getCurrentUserId(): String?
 
     suspend fun getCurrentUser(): User?
+
+    suspend fun getUserById(userId: String): Result<User?>
 }

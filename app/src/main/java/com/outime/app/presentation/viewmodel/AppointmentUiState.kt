@@ -8,5 +8,6 @@ data class AppointmentUiState(
     val error: String? = null,
     val appointments: List<Appointment> = emptyList(),
     val dayAppointments: List<Appointment> = emptyList(),
-    val selectedAppointment: Appointment? = null
+    val selectedAppointment: Appointment? = null,
+    val clientNames: Map<String, String> = emptyMap()
 )

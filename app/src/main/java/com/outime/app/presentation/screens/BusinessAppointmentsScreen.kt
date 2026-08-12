@@ -320,6 +320,7 @@ fun BusinessAppointmentsScreen(
                         items(appointmentsForDate) { appointment ->
                             BusinessAppointmentCard(
                                 appointment = appointment,
+                                clientName = appointmentUiState.clientNames[appointment.clientId],
                                 onMarkCompleted = {
                                     appointmentViewModel.updateAppointmentStatus(
                                         appointment.id,
@@ -344,6 +345,7 @@ fun BusinessAppointmentsScreen(
 @Composable
 private fun BusinessAppointmentCard(
     appointment: Appointment,
+    clientName: String?,
     onMarkCompleted: () -> Unit,
     onCancel: () -> Unit
 ) {
@@ -409,7 +411,7 @@ private fun BusinessAppointmentCard(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = appointment.clientId,
+                        text = clientName ?: appointment.clientId,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,

@@ -87,7 +87,7 @@ fun AppNavGraph() {
     )
 
     val appointmentViewModel: AppointmentViewModel = viewModel(
-        factory = AppointmentViewModelFactory(appointmentRepository)
+        factory = AppointmentViewModelFactory(appointmentRepository, authRepository)
     )
 
     val scheduleRepository = ScheduleRepositoryImpl(
