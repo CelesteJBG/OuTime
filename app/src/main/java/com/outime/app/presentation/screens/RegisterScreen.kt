@@ -1,6 +1,8 @@
 package com.outime.app.presentation.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,13 +12,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -24,11 +35,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -86,11 +96,23 @@ fun RegisterScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "Crear cuenta",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Column(
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    ) {
+                        Text(
+                            text = "Crear cuenta",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Únete a OuTime y empieza a reservar los mejores servicios",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -117,118 +139,150 @@ fun RegisterScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp, vertical = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Nombre") },
-                    modifier = Modifier.fillMaxWidth(),
-                    leadingIcon = {
+                // ── Elemento visual superior ────────────────────────────────
+                Surface(
+                    modifier = Modifier.size(90.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.Person,
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(58.dp)
                         )
-                    },
-                    singleLine = true,
-                    shape = MaterialTheme.shapes.medium,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                        focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
-                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                )
+                    }
+                }
 
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
+                // ── Campo: Nombre completo ──────────────────────────────────
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Mail,
-                            contentDescription = null
-                        )
-                    },
-                    singleLine = true,
-                    shape = MaterialTheme.shapes.medium,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                        focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
-                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-                )
-
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Contraseña") },
-                    modifier = Modifier.fillMaxWidth(),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = null
-                        )
-                    },
-                    singleLine = true,
-                    shape = MaterialTheme.shapes.medium,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                        focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
-                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Tipo de cuenta",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = selectedRole == UserRole.CLIENT,
-                            onClick = { selectedRole = UserRole.CLIENT },
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = MaterialTheme.colorScheme.primary,
-                                unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Escribe tu nombre completo") },
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null
                             )
+                        },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.medium,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Text("Cliente")
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = selectedRole == UserRole.BUSINESS,
-                            onClick = { selectedRole = UserRole.BUSINESS },
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = MaterialTheme.colorScheme.primary,
-                                unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // ── Campo: Email ────────────────────────────────────────────
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Escribe tu email") },
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Mail,
+                                contentDescription = null
                             )
-                        )
-                        Text("Negocio")
-                    }
+                        },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.medium,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                    )
+                }
+
+                // ── Campo: Contraseña ───────────────────────────────────────
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Crea una contraseña") },
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = null
+                            )
+                        },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.medium,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // ── Tipo de cuenta ──────────────────────────────────────────
+                Text(
+                    text = "Tipo de cuenta",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Tarjeta: Cliente
+                    RoleCard(
+                        icon = Icons.Default.Person,
+                        title = "Cliente",
+                        description = "Reserva servicios en negocios locales",
+                        isSelected = selectedRole == UserRole.CLIENT,
+                        onClick = { selectedRole = UserRole.CLIENT },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    // Tarjeta: Negocio
+                    RoleCard(
+                        icon = Icons.Default.Store,
+                        title = "Negocio",
+                        description = "Ofrece tus servicios y llega a más clientes",
+                        isSelected = selectedRole == UserRole.BUSINESS,
+                        onClick = { selectedRole = UserRole.BUSINESS },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // ── CTA: Registrarse ────────────────────────────────────────
                 Button(
                     onClick = {
                         authViewModel.register(
@@ -242,18 +296,147 @@ fun RegisterScreen(
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = MaterialTheme.shapes.medium,
-                    enabled = !uiState.isLoading && name.isNotBlank() && email.isNotBlank() && password.isNotBlank()
+                    enabled = !uiState.isLoading && name.isNotBlank() && email.isNotBlank() && password.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                        disabledContentColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
+                    )
                 ) {
-                    Text("Registrarse")
+                    Text(
+                        text = "Registrarse",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // ── Enlace: Iniciar sesión ──────────────────────────────────
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "¿Ya tienes una cuenta? ",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Inicia sesión",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.clickable { onBack() }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
+            // Overlay de carga
             if (uiState.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+        }
+    }
+}
+
+/**
+ * Tarjeta seleccionable para tipo de cuenta (Cliente / Negocio).
+ * Estado seleccionado con borde primary + fondo primaryContainer + checkmark.
+ */
+@Composable
+private fun RoleCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    description: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isSelected) 2.dp else 1.dp
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected)
+                MaterialTheme.colorScheme.primaryContainer
+            else
+                MaterialTheme.colorScheme.surface
+        ),
+        border = if (isSelected)
+            BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+        else
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        onClick = onClick
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    modifier = Modifier.size(36.dp),
+                    shape = CircleShape,
+                    color = if (isSelected)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.secondaryContainer
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = if (isSelected)
+                                MaterialTheme.colorScheme.onPrimary
+                            else
+                                MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                // Checkmark visible solo cuando está seleccionado
+                if (isSelected) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "Seleccionado",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = if (isSelected)
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                else
+                    MaterialTheme.colorScheme.onSurface
+            )
+
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (isSelected)
+                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
