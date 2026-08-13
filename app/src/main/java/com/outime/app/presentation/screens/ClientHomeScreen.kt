@@ -1,6 +1,7 @@
 package com.outime.app.presentation.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,25 +17,27 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.FaceRetouchingNatural
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -44,20 +47,43 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.outime.app.R
 import com.outime.app.domain.model.User
-import com.outime.app.presentation.components.BusinessCard
+import com.outime.app.presentation.components.BusinessDiscoveryCard
 import com.outime.app.presentation.viewmodel.AuthViewModel
 import com.outime.app.presentation.viewmodel.BusinessCatalogViewModel
 
+private data class CategoryItem(
+    val name: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector
+)
+
 private val CATEGORIES = listOf(
-    "Todas",
-    "Peluquería",
-    "Barbería",
-    "Estética",
-    "Masajes",
-    "Uñas"
+    CategoryItem("Todas", Icons.Default.Store),
+    CategoryItem("Peluquería", Icons.Default.ContentCut),
+    CategoryItem("Barbería", Icons.Default.ContentCut),
+    CategoryItem("Estética", Icons.Default.FaceRetouchingNatural),
+    CategoryItem("Masajes", Icons.Default.Spa),
+    CategoryItem("Uñas", Icons.Default.Spa)
+)
+
+private data class DiscoverServiceItem(
+    val title: String,
+    val imageRes: Int
+)
+
+private val DISCOVER_SERVICES = listOf(
+    DiscoverServiceItem("Clínica dental", R.drawable.servicio_clinica_dental),
+    DiscoverServiceItem("Taller mecánico", R.drawable.servicio_taller_mecanico),
+    DiscoverServiceItem("Fisioterapia", R.drawable.servicio_fisioterapia),
+    DiscoverServiceItem("Peluquería", R.drawable.servicio_peluqueria),
+    DiscoverServiceItem("Estudio tatuaje", R.drawable.servicio_estudio_tatto)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,21 +105,7 @@ fun ClientHomeScreen(
         ?: "Usuario"
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "OuTime",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        }
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
 
         LazyColumn(
@@ -101,114 +113,161 @@ fun ClientHomeScreen(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding),
-            contentPadding = PaddingValues(bottom = 24.dp)
+            contentPadding = PaddingValues(bottom = 32.dp)
         ) {
 
-            // ── Saludo ──────────────────────────────────────────────────
+            // ── HEADER / BRANDING con logo ────────────────────────────────
             item {
-                Column(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(top = 16.dp, bottom = 8.dp)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(horizontal = 8.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Hola, $greetingName",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "¿Qué servicio buscas hoy?",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    androidx.compose.foundation.Image(
+                        painter = painterResource(id = R.drawable.outime_logo_horizontal),
+                        contentDescription = "OuTime",
+                        modifier = Modifier.width(210.dp)
                     )
                 }
             }
 
-            // ── Buscador ─────────────────────────────────────────────────
+            // ── WELCOME / HERO ────────────────────────────────────────────
             item {
-                OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = { businessCatalogViewModel.onSearchQueryChanged(it) },
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    placeholder = {
-                        Text(
-                            text = "Buscar negocio...",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                    singleLine = true,
-                    shape = MaterialTheme.shapes.medium,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                        focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
-                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "Hola, $greetingName",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
                     )
-                )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "¿Qué servicio necesitas hoy?",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // ── Categorías ───────────────────────────────────────────────
+            // ── BUSCADOR con sombra ──────────────────────────────────────
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                ) {
+                    OutlinedTextField(
+                        value = uiState.searchQuery,
+                        onValueChange = { businessCatalogViewModel.onSearchQueryChanged(it) },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = {
+                            Text(
+                                text = "Buscar negocio...",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Buscar",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.medium,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,
+                            focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                        )
+                    )
+                }
+            }
+
+            // ── CATEGORÍAS ───────────────────────────────────────────────
             item {
                 Text(
-                    text = "Categorías",
+                    text = "Explorar categorías",
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp)
+                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
                 )
 
                 LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(CATEGORIES) { category ->
-                        val isSelected = if (category == "Todas") {
+                        val isSelected = if (category.name == "Todas") {
                             uiState.selectedCategory == null
                         } else {
-                            uiState.selectedCategory == category
+                            uiState.selectedCategory == category.name
                         }
 
-                        FilterChip(
-                            selected = isSelected,
+                        CategoryChip(
+                            category = category,
+                            isSelected = isSelected,
                             onClick = {
                                 businessCatalogViewModel.onCategorySelected(
-                                    if (category == "Todas") null else category
+                                    if (category.name == "Todas") null else category.name
                                 )
-                            },
-                            label = { Text(text = category) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            }
                         )
                     }
                 }
             }
 
-            // ── Destacados (estático) ────────────────────────────────────
+            // ── DESCUBRE SERVICIOS (LazyRow visual) ──────────────────────
+            item {
+                Text(
+                    text = "Descubre servicios",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 10.dp)
+                )
+
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(DISCOVER_SERVICES) { service ->
+                        DiscoverServiceCard(
+                            service = service,
+                            onClick = {
+                                // Reutilizar el flujo existente: navegar al primer
+                                // negocio disponible (asociación dinámica segura).
+                                uiState.businesses.firstOrNull()?.let { business ->
+                                    onNavigateToDetail(business.id)
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+
+            // ── DESTACADO / NEGOCIOS VERIFICADOS ──────────────────────────
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "Destacados",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
-                )
 
                 Card(
                     modifier = Modifier
@@ -223,16 +282,24 @@ fun ClientHomeScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp),
+                            .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                            modifier = Modifier.size(36.dp)
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Surface(
+                            modifier = Modifier.size(40.dp),
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Star,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(14.dp))
                         Column {
                             Text(
                                 text = "Negocios verificados",
@@ -240,26 +307,27 @@ fun ClientHomeScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer
                             )
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Todos los negocios en OuTime están verificados y listos para atenderte.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // ── Listado de negocios ──────────────────────────────────────
+            // ── LISTADO DE NEGOCIOS ──────────────────────────────────────
             item {
                 Text(
-                    text = "Negocios",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
+                    text = "Descubrir negocios",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+                    modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 8.dp)
                 )
             }
 
@@ -278,22 +346,27 @@ fun ClientHomeScreen(
                 }
             } else if (uiState.error != null) {
                 item {
-                    Text(
-                        text = "Error al cargar los negocios.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = { businessCatalogViewModel.loadBusinesses() },
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        shape = MaterialTheme.shapes.medium,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text("Reintentar")
+                        Text(
+                            text = "Error al cargar los negocios.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Button(
+                            onClick = { businessCatalogViewModel.loadBusinesses() },
+                            shape = MaterialTheme.shapes.medium,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text("Reintentar")
+                        }
                     }
                 }
             } else if (uiState.filteredBusinesses.isEmpty()) {
@@ -315,14 +388,107 @@ fun ClientHomeScreen(
                     }
                 }
             } else {
-                items(uiState.filteredBusinesses) { business ->
-                    BusinessCard(
+                items(
+                    uiState.filteredBusinesses,
+                    key = { it.id }
+                ) { business ->
+                    BusinessDiscoveryCard(
                         business = business,
                         onClick = { onNavigateToDetail(business.id) },
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DiscoverServiceCard(
+    service: DiscoverServiceItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .width(160.dp)
+            .clickable { onClick() },
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column {
+            // Imagen local con recorte limpio (sin bordes desentonados)
+            androidx.compose.foundation.Image(
+                painter = painterResource(id = service.imageRes),
+                contentDescription = service.title,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(110.dp)
+                    .clip(MaterialTheme.shapes.medium),
+                contentScale = ContentScale.Crop
+            )
+            // Título del servicio
+            Text(
+                text = service.title,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun CategoryChip(
+    category: CategoryItem,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val containerColor = if (isSelected)
+        MaterialTheme.colorScheme.primary
+    else
+        MaterialTheme.colorScheme.surface
+
+    val contentColor = if (isSelected)
+        MaterialTheme.colorScheme.onPrimary
+    else
+        MaterialTheme.colorScheme.onSurfaceVariant
+
+    Surface(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.medium,
+        color = containerColor,
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = if (isSelected)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.outlineVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                imageVector = category.icon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text = category.name,
+                style = MaterialTheme.typography.labelLarge,
+                color = contentColor,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium
+            )
         }
     }
 }
