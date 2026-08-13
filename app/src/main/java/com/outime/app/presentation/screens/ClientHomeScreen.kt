@@ -112,7 +112,11 @@ fun ClientHomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(innerPadding),
+                // Padding inferior reservado para la Bottom Navigation.
+                // El padding superior NO se aplica aquí para que el fondo
+                // `surface` del header se extienda hasta el top superior,
+                // igual que en ClientAppointmentsScreen.
+                .padding(bottom = innerPadding.calculateBottomPadding()),
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
 
@@ -122,6 +126,11 @@ fun ClientHomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surface)
+                        // Padding superior = barra de estado + espaciado base
+                        .padding(
+                            top = innerPadding.calculateTopPadding(),
+                            bottom = 8.dp
+                        )
                         .padding(horizontal = 8.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -143,7 +152,8 @@ fun ClientHomeScreen(
                 ) {
                     Text(
                         text = "Hola, $greetingName",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(6.dp))
