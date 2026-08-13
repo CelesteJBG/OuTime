@@ -236,6 +236,7 @@ fun AppNavGraph() {
             composable(Routes.CLIENT_PROFILE) {
                 ClientProfileScreen(
                     authViewModel = authViewModel,
+                    appointmentViewModel = appointmentViewModel,
                     onNavigateToAppointments = {
                         navController.navigate(Routes.CLIENT_APPOINTMENTS) {
                             popUpTo(Routes.CLIENT_HOME) {
