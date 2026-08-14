@@ -82,6 +82,14 @@ class AuthRepositoryImpl(
         }
     }
 
+    override suspend fun sendPasswordResetEmail(email: String): Result<Unit> = try {
+        firebaseAuth.setLanguageCode("es")
+        firebaseAuth.sendPasswordResetEmail(email).await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
     override suspend fun getUserById(userId: String): Result<User?> = try {
         val snapshot = firestore
             .collection(USERS_COLLECTION)

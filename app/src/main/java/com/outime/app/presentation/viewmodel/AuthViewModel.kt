@@ -2,13 +2,14 @@ package com.outime.app.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.outime.app.domain.model.User
 import com.outime.app.domain.model.UserRole
 import com.outime.app.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import com.outime.app.domain.model.User
 
 class AuthViewModel(
     private val authRepository: AuthRepository
@@ -90,6 +91,35 @@ class AuthViewModel(
 
     fun resetState() {
         _uiState.value = AuthUiState()
+    }
+
+    fun sendPasswordReset(email: String) {
+        viewModelScope.launch {
+
+            _uiState.value = AuthUiState(isLoading = true)
+
+            val result = authRepository.sendPasswordResetEmail(email)
+
+            result.fold(
+                onSuccess = {
+                    _uiState.value = AuthUiState(isResetSent = true)
+                },
+                onFailure = { error ->
+                    _uiState.value = AuthUiState(
+                        error = mapPasswordResetError(error)
+                    )
+                }
+            )
+        }
+    }
+
+    /**
+     * Convierte un error de Firebase en un mensaje seguro y genérico.
+     * Nunca expone detalles técnicos ni información sobre la existencia de cuentas.
+     */
+    private fun mapPasswordResetError(error: Throwable): String = when (error) {
+        is FirebaseAuthInvalidCredentialsException -> "Introduce un correo electrónico válido."
+        else -> "No se pudo enviar el correo. Inténtalo de nuevo."
     }
 
     fun currentUserId(): String?{

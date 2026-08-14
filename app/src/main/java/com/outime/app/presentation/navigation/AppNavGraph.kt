@@ -35,6 +35,7 @@ import com.outime.app.presentation.screens.LoginScreen
 import com.outime.app.presentation.screens.RegisterScreen
 import com.outime.app.presentation.screens.ScheduleManagementScreen
 import com.outime.app.presentation.screens.SplashScreen
+import com.outime.app.presentation.screens.ForgotPasswordScreen
 import com.outime.app.presentation.viewmodel.AppointmentViewModel
 import com.outime.app.presentation.viewmodel.AppointmentViewModelFactory
 import com.outime.app.presentation.viewmodel.AuthViewModel
@@ -192,6 +193,9 @@ fun AppNavGraph() {
                     },
                     onNavigateToRegister = {
                         navController.navigate(Routes.REGISTER)
+                    },
+                    onNavigateToForgotPassword = {
+                        navController.navigate(Routes.FORGOT_PASSWORD)
                     }
                 )
             }
@@ -205,6 +209,20 @@ fun AppNavGraph() {
                     onRegisterSuccess = {
                         navController.navigate(Routes.SPLASH) {
                             popUpTo(Routes.REGISTER) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable(Routes.FORGOT_PASSWORD) {
+                ForgotPasswordScreen(
+                    authViewModel = authViewModel,
+                    onBack = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToLogin = {
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(Routes.FORGOT_PASSWORD) { inclusive = true }
                         }
                     }
                 )

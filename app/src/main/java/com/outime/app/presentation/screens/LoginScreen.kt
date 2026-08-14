@@ -54,10 +54,12 @@ import kotlinx.coroutines.launch
 fun LoginScreen(
     authViewModel: AuthViewModel,
     onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onNavigateToForgotPassword: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf<String?>(null) }
 
     val uiState by authViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -73,7 +75,7 @@ fun LoginScreen(
     LaunchedEffect(uiState.error) {
         uiState.error?.let { errorMsg ->
             scope.launch {
-                snackbarHostState.showSnackbar("No se pudo iniciar sesión.")
+                snackbarHostState.showSnackbar("No se pudo iniciar sesión. Email o contraseña incorrectos")
             }
             authViewModel.resetState()
         }
@@ -128,7 +130,10 @@ fun LoginScreen(
                 // ── Form ──
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        emailError = null
+                    },
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
                     leadingIcon = {
@@ -138,6 +143,8 @@ fun LoginScreen(
                         )
                     },
                     singleLine = true,
+                    isError = emailError != null,
+                    supportingText = emailError?.let { msg -> { Text(msg) } },
                     shape = MaterialTheme.shapes.medium,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -185,7 +192,7 @@ fun LoginScreen(
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Normal,
                         modifier = Modifier.clickable {
-                            // TODO: Navigate to forgot password screen
+                            onNavigateToForgotPassword()
                         }
                     )
                 }
@@ -195,10 +202,19 @@ fun LoginScreen(
                 // ── CTA ──
                 Button(
                     onClick = {
-                        authViewModel.login(
-                            email = email,
-                            password = password
-                        )
+                        val trimmed = email.trim()
+                        emailError = when {
+                            trimmed.isBlank() -> "El email no puede estar vacío."
+                            !trimmed.matches(Regex("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) ->
+                                "Introduce un correo electrónico válido."
+                            else -> null
+                        }
+                        if (emailError == null) {
+                            authViewModel.login(
+                                email = email,
+                                password = password
+                            )
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
