@@ -446,7 +446,7 @@ private fun ServiceImagePicker(
 }
 
 @Composable
-private fun ServiceTextField(
+internal fun ServiceTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,

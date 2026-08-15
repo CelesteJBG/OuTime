@@ -20,8 +20,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -39,6 +43,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -57,9 +64,13 @@ fun BusinessServicesScreen(
     businessId: String,
     serviceViewModel: ServiceViewModel,
     onNavigateToCreateService: () -> Unit,
+    onEditService: (serviceId: String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val serviceUiState by serviceViewModel.uiState.collectAsState()
+
+    // Servicio sobre el que se está confirmando la baja lógica.
+    var serviceToDeactivate by remember { mutableStateOf<Service?>(null) }
 
     // Carga inicial de servicios
     LaunchedEffect(businessId) {
@@ -182,20 +193,53 @@ fun BusinessServicesScreen(
                         serviceUiState.services,
                         key = { it.id }
                     ) { service ->
-                        ServiceCard(service = service)
+                        ServiceCard(
+                            service = service,
+                            onEdit = { onEditService(service.id) },
+                            onDeactivate = { serviceToDeactivate = service }
+                        )
                     }
                 }
             }
         }
+    }
+
+    // Diálogo de confirmación de la baja lógica (no elimina el documento).
+    serviceToDeactivate?.let { service ->
+        AlertDialog(
+            onDismissRequest = { serviceToDeactivate = null },
+            title = { Text("¿Desactivar servicio?") },
+            text = { Text("El servicio dejará de estar disponible para nuevas reservas.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        serviceViewModel.deactivateService(service.id, businessId)
+                        serviceToDeactivate = null
+                    }
+                ) {
+                    Text("Desactivar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { serviceToDeactivate = null }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 
 /**
  * Tarjeta de servicio con franja lateral, nombre destacado,
  * duración con icono de reloj y precio en contenedor sutil.
+ * Añade acciones de edición y baja lógica.
  */
 @Composable
-private fun ServiceCard(service: Service) {
+private fun ServiceCard(
+    service: Service,
+    onEdit: () -> Unit,
+    onDeactivate: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -223,16 +267,44 @@ private fun ServiceCard(service: Service) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Nombre del servicio — línea principal
-                Text(
-                    text = service.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                // Nombre del servicio + acciones (editar / desactivar)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = service.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(
+                        onClick = onEdit,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Editar servicio",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    IconButton(
+                        onClick = onDeactivate,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Block,
+                            contentDescription = "Desactivar servicio",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
 
                 // Información secundaria: duración + precio
                 Row(

@@ -31,7 +31,8 @@ class ServiceViewModel(
                 name = name,
                 description = description,
                 durationMinutes = durationMinutes,
-                price = price
+                price = price,
+                isActive = true
             )
 
             val result = serviceRepository.createService(service)
@@ -53,6 +54,77 @@ class ServiceViewModel(
         }
     }
 
+    fun updateService(
+        serviceId: String,
+        businessId: String,
+        name: String,
+        description: String,
+        durationMinutes: Int,
+        price: Double
+    ) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+
+            val current = _uiState.value.services
+                .firstOrNull { it.id == serviceId }
+
+            val service = Service(
+                id = serviceId,
+                businessId = businessId,
+                name = name,
+                description = description,
+                durationMinutes = durationMinutes,
+                price = price,
+                isActive = current?.isActive ?: true
+            )
+
+            val result = serviceRepository.updateService(service)
+
+            result.fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isSuccess = true
+                    )
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = error.message
+                    )
+                }
+            )
+        }
+    }
+
+    /** Baja lógica: marca el servicio inactivo y recarga la lista. */
+    fun deactivateService(serviceId: String, businessId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+
+            val result = serviceRepository.deactivateService(serviceId)
+
+            result.fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isSuccess = true
+                    )
+                    // El servicio desaparece de la lista de activos.
+                    if (businessId.isNotEmpty()) {
+                        loadServices(businessId)
+                    }
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = error.message
+                    )
+                }
+            )
+        }
+    }
+
     fun loadServices(businessId: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
@@ -63,7 +135,10 @@ class ServiceViewModel(
                 onSuccess = { services ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        services = services
+                        // Se conservan todos para ingresos/estadísticas.
+                        allServices = services,
+                        // Solo se muestran/reservan los activos.
+                        services = services.filter { it.isActive }
                     )
                 },
                 onFailure = { error ->

@@ -129,8 +129,10 @@ fun BusinessHomeScreen(
     val appointmentsToday = appointmentUiState.dayAppointments.size
     val uniqueClients = appointmentUiState.appointments.map { it.clientId }.distinct().size
 
-    // Ingresos: cruzar citas confirmadas/completadas con servicios por serviceId
-    val services = serviceUiState.services
+    // Ingresos: cruzar citas confirmadas/completadas con servicios por serviceId.
+    // Se usa allServices (activos + inactivos) para que las citas históricas
+    // asociadas a servicios desactivados sigan contando su precio.
+    val services = serviceUiState.allServices
     val servicePriceMap = remember(services) {
         services.associate { it.id to it.price }
     }

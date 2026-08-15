@@ -410,8 +410,14 @@ private fun ClientAppointmentCard(
                 }
             }
 
-            // Acción: solo cancelar si está confirmada
-            if (appointment.status == AppointmentStatus.CONFIRMED) {
+            // Acción: solo cancelar citas futuras en estado PENDIENTE o
+            // CONFIRMADA. Las citas pasadas, COMPLETADAS o CANCELADAS se
+            // conservan como historial y no muestran la acción de cancelar.
+            val isUpcoming = appointment.dateTime > System.currentTimeMillis()
+            val canCancel = isUpcoming &&
+                (appointment.status == AppointmentStatus.CONFIRMED ||
+                    appointment.status == AppointmentStatus.PENDING)
+            if (canCancel) {
                 Spacer(modifier = Modifier.height(4.dp))
                 OutlinedButton(
                     onClick = onCancel,

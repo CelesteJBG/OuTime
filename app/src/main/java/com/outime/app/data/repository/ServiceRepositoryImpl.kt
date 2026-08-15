@@ -27,6 +27,30 @@ class ServiceRepositoryImpl(
         Result.failure(e)
     }
 
+    override suspend fun updateService(service: Service): Result<Unit> = try {
+        firestore
+            .collection(SERVICES_COLLECTION)
+            .document(service.id)
+            .set(service)
+            .await()
+
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun deactivateService(serviceId: String): Result<Unit> = try {
+        firestore
+            .collection(SERVICES_COLLECTION)
+            .document(serviceId)
+            .update("isActive", false)
+            .await()
+
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
     override suspend fun getServicesByBusiness(businessId: String): Result<List<Service>> = try {
         val snapshot = firestore
             .collection(SERVICES_COLLECTION)

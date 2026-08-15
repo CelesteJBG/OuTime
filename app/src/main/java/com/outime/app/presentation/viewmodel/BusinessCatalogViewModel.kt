@@ -89,7 +89,8 @@ class BusinessCatalogViewModel(
                         onSuccess = { services ->
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
-                                selectedServices = services
+                                // Solo los activos son seleccionables/reservables.
+                                selectedServices = services.filter { it.isActive }
                             )
                         },
                         onFailure = { error ->

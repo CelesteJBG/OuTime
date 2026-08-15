@@ -34,6 +34,7 @@ import com.outime.app.presentation.screens.CreateBusinessScreen
 import com.outime.app.presentation.screens.CreateServiceScreen
 import com.outime.app.presentation.screens.EditBusinessProfileScreen
 import com.outime.app.presentation.screens.EditClientProfileScreen
+import com.outime.app.presentation.screens.EditServiceScreen
 import com.outime.app.presentation.screens.LoginScreen
 import com.outime.app.presentation.screens.RegisterScreen
 import com.outime.app.presentation.screens.ScheduleManagementScreen
@@ -337,6 +338,9 @@ fun AppNavGraph() {
                     onNavigateToCreateService = {
                         navController.navigate(Routes.CREATE_SERVICE)
                     },
+                    onEditService = { serviceId ->
+                        navController.navigate(Routes.editService(serviceId))
+                    },
                     onNavigateBack = {
                         navController.popBackStack()
                     }
@@ -531,6 +535,24 @@ fun AppNavGraph() {
                 CreateServiceScreen(
                     serviceViewModel = serviceViewModel,
                     businessId = businessId,
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(
+                route = Routes.EDIT_SERVICE,
+                arguments = listOf(
+                    navArgument("serviceId") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val serviceId = backStackEntry.arguments?.getString("serviceId") ?: ""
+                val businessId = businessViewModel.currentBusinessId() ?: ""
+                EditServiceScreen(
+                    serviceId = serviceId,
+                    businessId = businessId,
+                    serviceViewModel = serviceViewModel,
                     onBack = {
                         navController.popBackStack()
                     }

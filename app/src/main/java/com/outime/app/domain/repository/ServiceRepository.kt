@@ -6,6 +6,11 @@ interface ServiceRepository {
 
     suspend fun createService(service: Service): Result<Unit>
 
+    suspend fun updateService(service: Service): Result<Unit>
+
+    /** Baja lógica: marca el servicio como inactivo sin borrar el documento. */
+    suspend fun deactivateService(serviceId: String): Result<Unit>
+
     suspend fun getServicesByBusiness(businessId: String): Result<List<Service>>
 
     suspend fun migrateServiceBusinessId(oldBusinessId: String, newBusinessId: String): Result<Unit>
