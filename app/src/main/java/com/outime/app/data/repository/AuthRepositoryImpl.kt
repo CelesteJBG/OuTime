@@ -90,6 +90,22 @@ class AuthRepositoryImpl(
         Result.failure(e)
     }
 
+    override suspend fun updateUser(user: User): Result<Unit> = try {
+        firestore
+            .collection(USERS_COLLECTION)
+            .document(user.id)
+            .update(
+                mapOf(
+                    "name" to user.name
+                )
+            )
+            .await()
+
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
     override suspend fun getUserById(userId: String): Result<User?> = try {
         val snapshot = firestore
             .collection(USERS_COLLECTION)

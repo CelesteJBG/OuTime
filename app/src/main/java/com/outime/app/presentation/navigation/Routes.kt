@@ -18,6 +18,9 @@ object Routes {
     const val BUSINESS_PROFILE = "business_profile"
     const val CLIENT_PROFILE = "client_profile"
 
+    const val CLIENT_PROFILE_EDIT = "client_profile_edit"
+    const val BUSINESS_PROFILE_EDIT = "business_profile_edit"
+
     const val FORGOT_PASSWORD = "forgot_password"
 
     const val BUSINESS_DETAIL = "business_detail/{businessId}"

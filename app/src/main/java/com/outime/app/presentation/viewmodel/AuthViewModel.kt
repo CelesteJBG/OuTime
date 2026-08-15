@@ -130,6 +130,52 @@ class AuthViewModel(
         return authRepository.getCurrentUser()
     }
 
-  
+    fun updateUser(
+        name: String
+    ) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                error = null,
+                isSuccess = false
+            )
+
+            val uid = authRepository.getCurrentUserId()
+                ?: run {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "No se pudo identificar la sesión. Vuelve a iniciar sesión."
+                    )
+                    return@launch
+                }
+
+            val current = authRepository.getCurrentUser()
+
+            val user = User(
+                id = uid,
+                name = name,
+                email = current?.email ?: "",
+                role = current?.role ?: UserRole.CLIENT,
+                createdAt = current?.createdAt ?: System.currentTimeMillis()
+            )
+
+            val result = authRepository.updateUser(user)
+
+            result.fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isSuccess = true
+                    )
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = error.message
+                    )
+                }
+            )
+        }
+    }
 
 }

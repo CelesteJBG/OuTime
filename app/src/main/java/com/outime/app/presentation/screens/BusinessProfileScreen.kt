@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Store
@@ -31,6 +32,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -62,6 +64,7 @@ fun BusinessProfileScreen(
     serviceViewModel: ServiceViewModel,
     onNavigateToServices: () -> Unit,
     onNavigateToSchedule: () -> Unit,
+    onNavigateToEdit: () -> Unit,
     onLogout: () -> Unit
 ) {
     val businessUiState by businessViewModel.uiState.collectAsState()
@@ -120,6 +123,20 @@ fun BusinessProfileScreen(
                     .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Botón de edición de perfil (icono lápiz, único punto de acceso)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    IconButton(onClick = onNavigateToEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Editar perfil",
+                            tint = Color.White
+                        )
+                    }
+                }
+
                 // Avatar con las iniciales del negocio
                 Surface(
                     modifier = Modifier

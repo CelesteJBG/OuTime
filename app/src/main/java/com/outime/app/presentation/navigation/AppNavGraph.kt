@@ -3,6 +3,7 @@ package com.outime.app.presentation.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -31,6 +32,8 @@ import com.outime.app.presentation.screens.ClientHomeScreen
 import com.outime.app.presentation.screens.ClientProfileScreen
 import com.outime.app.presentation.screens.CreateBusinessScreen
 import com.outime.app.presentation.screens.CreateServiceScreen
+import com.outime.app.presentation.screens.EditBusinessProfileScreen
+import com.outime.app.presentation.screens.EditClientProfileScreen
 import com.outime.app.presentation.screens.LoginScreen
 import com.outime.app.presentation.screens.RegisterScreen
 import com.outime.app.presentation.screens.ScheduleManagementScreen
@@ -264,6 +267,9 @@ fun AppNavGraph() {
                             restoreState = true
                         }
                     },
+                    onNavigateToEdit = {
+                        navController.navigate(Routes.CLIENT_PROFILE_EDIT)
+                    },
                     onLogout = {
                         authViewModel.logout()
                         navController.navigate(Routes.LOGIN) {
@@ -371,6 +377,9 @@ fun AppNavGraph() {
                             restoreState = true
                         }
                     },
+                    onNavigateToEdit = {
+                        navController.navigate(Routes.BUSINESS_PROFILE_EDIT)
+                    },
                     onLogout = {
                         authViewModel.logout()
                         navController.navigate(Routes.LOGIN) {
@@ -465,6 +474,39 @@ fun AppNavGraph() {
                         navController.navigate(Routes.CLIENT_HOME) {
                             popUpTo(Routes.CLIENT_HOME) { inclusive = true }
                         }
+                    }
+                )
+            }
+
+            // ── Edit profile routes (no bottom bar) ─────────────────
+            composable(Routes.CLIENT_PROFILE_EDIT) {
+                EditClientProfileScreen(
+                    authViewModel = authViewModel,
+                    onSaved = {
+                        navController.popBackStack()
+                    },
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(Routes.BUSINESS_PROFILE_EDIT) {
+                // Garantiza que el negocio esté cargado antes de editar
+                LaunchedEffect(Unit) {
+                    val ownerId = authViewModel.currentUserId() ?: return@LaunchedEffect
+                    if (businessViewModel.uiState.value.business == null) {
+                        businessViewModel.loadBusinessByOwnerId(ownerId)
+                    }
+                }
+                EditBusinessProfileScreen(
+                    businessViewModel = businessViewModel,
+                    authViewModel = authViewModel,
+                    onSaved = {
+                        navController.popBackStack()
+                    },
+                    onBack = {
+                        navController.popBackStack()
                     }
                 )
             }
