@@ -61,7 +61,7 @@ fun BusinessDetailScreen(
     businessId: String,
     businessCatalogViewModel: BusinessCatalogViewModel,
     onNavigateBack: () -> Unit,
-    onReserveClick: (serviceId: String, serviceName: String, durationMinutes: Int) -> Unit
+    onReserveClick: (serviceId: String, serviceName: String, durationMinutes: Int, servicePrice: Double) -> Unit
 ) {
     val uiState by businessCatalogViewModel.uiState.collectAsState()
 
@@ -265,7 +265,7 @@ fun BusinessDetailScreen(
                         Button(
                             onClick = {
                                 val service = selectedService ?: return@Button
-                                onReserveClick(service.id, service.name, service.durationMinutes)
+                                onReserveClick(service.id, service.name, service.durationMinutes, service.price)
                             },
                             modifier = Modifier
                                 .fillMaxWidth()

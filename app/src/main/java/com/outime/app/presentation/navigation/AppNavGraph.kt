@@ -27,6 +27,7 @@ import com.outime.app.presentation.screens.BusinessDetailScreen
 import com.outime.app.presentation.screens.BusinessHomeScreen
 import com.outime.app.presentation.screens.BusinessProfileScreen
 import com.outime.app.presentation.screens.BusinessServicesScreen
+import com.outime.app.presentation.screens.BusinessStatisticsScreen
 import com.outime.app.presentation.screens.ClientAppointmentsScreen
 import com.outime.app.presentation.screens.ClientHomeScreen
 import com.outime.app.presentation.screens.ClientProfileScreen
@@ -52,6 +53,8 @@ import com.outime.app.presentation.viewmodel.ScheduleViewModel
 import com.outime.app.presentation.viewmodel.ScheduleViewModelFactory
 import com.outime.app.presentation.viewmodel.ServiceViewModel
 import com.outime.app.presentation.viewmodel.ServiceViewModelFactory
+import com.outime.app.presentation.viewmodel.StatisticsViewModel
+import com.outime.app.presentation.viewmodel.StatisticsViewModelFactory
 
 @Composable
 fun AppNavGraph() {
@@ -101,6 +104,10 @@ fun AppNavGraph() {
 
     val scheduleViewModel: ScheduleViewModel = viewModel(
         factory = ScheduleViewModelFactory(scheduleRepository)
+    )
+
+    val statisticsViewModel: StatisticsViewModel = viewModel(
+        factory = StatisticsViewModelFactory(appointmentRepository, serviceRepository)
     )
 
     // ── Track current route for Bottom Navigation ──────────────────
@@ -384,11 +391,25 @@ fun AppNavGraph() {
                     onNavigateToEdit = {
                         navController.navigate(Routes.BUSINESS_PROFILE_EDIT)
                     },
+                    onNavigateToStatistics = {
+                        navController.navigate(Routes.BUSINESS_STATISTICS)
+                    },
                     onLogout = {
                         authViewModel.logout()
                         navController.navigate(Routes.LOGIN) {
                             popUpTo(0)
                         }
+                    }
+                )
+            }
+
+            composable(Routes.BUSINESS_STATISTICS) {
+                val businessId = businessViewModel.currentBusinessId() ?: ""
+                BusinessStatisticsScreen(
+                    businessId = businessId,
+                    statisticsViewModel = statisticsViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
                     }
                 )
             }
@@ -408,7 +429,7 @@ fun AppNavGraph() {
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onReserveClick = { serviceId, serviceName, durationMinutes ->
+                    onReserveClick = { serviceId, serviceName, durationMinutes, servicePrice ->
                         val business = businessCatalogViewModel.uiState.value.selectedBusiness
                         val clientId = authViewModel.currentUserId() ?: ""
                         if (business != null && clientId.isNotBlank()) {
@@ -419,7 +440,8 @@ fun AppNavGraph() {
                                     businessName = business.name,
                                     serviceName = serviceName,
                                     clientId = clientId,
-                                    durationMinutes = durationMinutes
+                                    durationMinutes = durationMinutes,
+                                    servicePrice = servicePrice
                                 )
                             )
                         }
@@ -447,6 +469,10 @@ fun AppNavGraph() {
                     navArgument("durationMinutes") {
                         type = NavType.IntType
                         defaultValue = 30
+                    },
+                    navArgument("servicePrice") {
+                        type = NavType.FloatType
+                        defaultValue = 0f
                     }
                 )
             ) { backStackEntry ->
@@ -461,6 +487,7 @@ fun AppNavGraph() {
                 )
                 val clientId = args?.getString("clientId") ?: ""
                 val durationMinutes = args?.getInt("durationMinutes") ?: 30
+                val servicePrice = (args?.getFloat("servicePrice") ?: 0f).toDouble()
 
                 BookingScreen(
                     clientId = clientId,
@@ -469,6 +496,7 @@ fun AppNavGraph() {
                     serviceId = serviceId,
                     serviceName = serviceName,
                     durationMinutes = durationMinutes,
+                    servicePrice = servicePrice,
                     appointmentViewModel = appointmentViewModel,
                     scheduleViewModel = scheduleViewModel,
                     onNavigateBack = {

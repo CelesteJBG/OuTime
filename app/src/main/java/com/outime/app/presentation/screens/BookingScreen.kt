@@ -71,6 +71,7 @@ fun BookingScreen(
     serviceId: String,
     serviceName: String,
     durationMinutes: Int,
+    servicePrice: Double,
     appointmentViewModel: AppointmentViewModel,
     scheduleViewModel: ScheduleViewModel,
     onNavigateBack: () -> Unit,
@@ -481,7 +482,8 @@ fun BookingScreen(
                             businessName = businessName,
                             serviceId = serviceId,
                             serviceName = serviceName,
-                            dateTime = slot.startMillis
+                            dateTime = slot.startMillis,
+                            servicePrice = servicePrice
                         )
                     },
                     modifier = Modifier

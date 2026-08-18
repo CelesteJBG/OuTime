@@ -65,6 +65,7 @@ fun BusinessProfileScreen(
     onNavigateToServices: () -> Unit,
     onNavigateToSchedule: () -> Unit,
     onNavigateToEdit: () -> Unit,
+    onNavigateToStatistics: () -> Unit,
     onLogout: () -> Unit
 ) {
     val businessUiState by businessViewModel.uiState.collectAsState()
@@ -305,12 +306,12 @@ fun BusinessProfileScreen(
                             onClick = onNavigateToSchedule
                         )
                         HorizontalDivider()
-                        // Estadísticas (preparado para futura ampliación)
+                        // Estadísticas (acceso al análisis del negocio)
                         QuickAccessRow(
                             icon = Icons.Default.BarChart,
                             title = "Estadísticas",
                             description = "Resumen de tu negocio",
-                            onClick = { /* Preparado para futura ampliación */ }
+                            onClick = onNavigateToStatistics
                         )
                     }
                 }

@@ -20,6 +20,7 @@ object Routes {
 
     const val BUSINESS_SERVICES = "business_services"
     const val BUSINESS_PROFILE = "business_profile"
+    const val BUSINESS_STATISTICS = "business_statistics"
     const val CLIENT_PROFILE = "client_profile"
 
     const val CLIENT_PROFILE_EDIT = "client_profile_edit"
@@ -31,7 +32,7 @@ object Routes {
 
     fun businessDetail(businessId: String) = "business_detail/$businessId"
 
-    const val BOOKING = "booking/{businessId}/{serviceId}?businessName={businessName}&serviceName={serviceName}&clientId={clientId}&durationMinutes={durationMinutes}"
+    const val BOOKING = "booking/{businessId}/{serviceId}?businessName={businessName}&serviceName={serviceName}&clientId={clientId}&durationMinutes={durationMinutes}&servicePrice={servicePrice}"
 
     fun booking(
         businessId: String,
@@ -39,8 +40,9 @@ object Routes {
         businessName: String,
         serviceName: String,
         clientId: String,
-        durationMinutes: Int
-    ) = "booking/$businessId/$serviceId?businessName=${businessName.encode()}&serviceName=${serviceName.encode()}&clientId=$clientId&durationMinutes=$durationMinutes"
+        durationMinutes: Int,
+        servicePrice: Double
+    ) = "booking/$businessId/$serviceId?businessName=${businessName.encode()}&serviceName=${serviceName.encode()}&clientId=$clientId&durationMinutes=$durationMinutes&servicePrice=$servicePrice"
 
     private fun String.encode(): String =
         java.net.URLEncoder.encode(this, "UTF-8")

@@ -132,6 +132,8 @@ fun BusinessHomeScreen(
     // Ingresos: cruzar citas confirmadas/completadas con servicios por serviceId.
     // Se usa allServices (activos + inactivos) para que las citas históricas
     // asociadas a servicios desactivados sigan contando su precio.
+    // Prioriza el snapshot histórico Appointment.servicePrice y solo usa el precio
+    // actual del servicio como fallback para citas antiguas (servicePrice == 0).
     val services = serviceUiState.allServices
     val servicePriceMap = remember(services) {
         services.associate { it.id to it.price }
@@ -139,7 +141,9 @@ fun BusinessHomeScreen(
     val totalRevenue = remember(appointmentUiState.appointments, servicePriceMap) {
         appointmentUiState.appointments
             .filter { it.status.name == "CONFIRMED" || it.status.name == "COMPLETED" }
-            .sumOf { servicePriceMap[it.serviceId] ?: 0.0 }
+            .sumOf { appointment ->
+                appointment.servicePrice.takeIf { it > 0.0 } ?: (servicePriceMap[appointment.serviceId] ?: 0.0)
+            }
     }
 
     Scaffold(

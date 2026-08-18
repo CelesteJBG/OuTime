@@ -27,7 +27,8 @@ class AppointmentViewModel(
         businessName: String,
         serviceId: String,
         serviceName: String,
-        dateTime: Long
+        dateTime: Long,
+        servicePrice: Double
     ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
@@ -39,7 +40,8 @@ class AppointmentViewModel(
                 serviceId = serviceId,
                 serviceName = serviceName,
                 dateTime = dateTime,
-                status = AppointmentStatus.CONFIRMED
+                status = AppointmentStatus.CONFIRMED,
+                servicePrice = servicePrice
             )
 
             val result = appointmentRepository.createAppointment(appointment)
