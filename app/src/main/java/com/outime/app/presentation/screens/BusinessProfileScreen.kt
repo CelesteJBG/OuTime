@@ -20,9 +20,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.MiscellaneousServices
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
@@ -121,7 +120,7 @@ fun BusinessProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.primary)
-                    .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp),
+                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Botón de edición de perfil (icono lápiz, único punto de acceso)
@@ -141,7 +140,7 @@ fun BusinessProfileScreen(
                 // Avatar con las iniciales del negocio
                 Surface(
                     modifier = Modifier
-                        .size(72.dp)
+                        .size(68.dp)
                         .border(
                             width = 2.dp,
                             color = Color.White.copy(alpha = 0.4f),
@@ -160,7 +159,7 @@ fun BusinessProfileScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Nombre del negocio — DM Serif Display
                 Text(
@@ -172,7 +171,7 @@ fun BusinessProfileScreen(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
                 // Descripción
                 if (!business?.description.isNullOrBlank()) {
@@ -186,7 +185,7 @@ fun BusinessProfileScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 // Fila: categoría + rating (acento Warm Amber)
                 Row(
@@ -237,8 +236,8 @@ fun BusinessProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .padding(top = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(top = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 // ── Sección: Información ──────────────────────────────────
                 SectionHeader(title = "Información")
@@ -269,14 +268,14 @@ fun BusinessProfileScreen(
                         HorizontalDivider()
                         // Servicios activos
                         InfoRow(
-                            icon = Icons.Default.ContentCut,
+                            icon = Icons.Default.MiscellaneousServices,
                             label = "Servicios activos",
                             value = "$servicesCount"
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // ── Sección: Accesos rápidos ──────────────────────────────
                 SectionHeader(title = "Accesos rápidos")
@@ -292,7 +291,7 @@ fun BusinessProfileScreen(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         // Mis servicios
                         QuickAccessRow(
-                            icon = Icons.Default.ContentCut,
+                            icon = Icons.Default.MiscellaneousServices,
                             title = "Mis servicios",
                             description = "Gestiona tus servicios y precios",
                             onClick = onNavigateToServices
@@ -323,7 +322,7 @@ fun BusinessProfileScreen(
                     onClick = onLogout,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
+                        .height(48.dp),
                     shape = MaterialTheme.shapes.medium,
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.error
@@ -345,7 +344,7 @@ fun BusinessProfileScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }
@@ -430,7 +429,7 @@ private fun QuickAccessRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(

@@ -1,7 +1,7 @@
 package com.outime.app.presentation.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.MiscellaneousServices
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -36,7 +36,7 @@ fun businessNavItems(): List<BottomNavItem> = listOf(
     BottomNavItem(
         route = Routes.BUSINESS_SERVICES,
         label = "Servicios",
-        icon = Icons.Default.Build
+        icon = Icons.Default.MiscellaneousServices
     ),
     BottomNavItem(
         route = Routes.SCHEDULE_MANAGEMENT,

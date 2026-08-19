@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.outime.app.domain.repository.BusinessRepository
 import com.outime.app.domain.repository.ServiceRepository
+import com.outime.app.presentation.util.normalizeText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -116,13 +117,16 @@ class BusinessCatalogViewModel(
         query: String,
         category: String?
     ): List<com.outime.app.domain.model.Business> {
-        return businesses.filter { business ->
-            val matchesQuery = query.isBlank() ||
-                business.name.contains(query, ignoreCase = true) ||
-                business.description.contains(query, ignoreCase = true)
+        val normalizedQuery = normalizeText(query)
 
+        return businesses.filter { business ->
+            val matchesQuery = normalizedQuery.isBlank() ||
+                normalizeText(business.name).contains(normalizedQuery) ||
+                normalizeText(business.description).contains(normalizedQuery)
+
+            // Comparación por categoría normalizada (sin mayúsculas/acentos/espacios).
             val matchesCategory = category == null ||
-                business.category.equals(category, ignoreCase = true)
+                normalizeText(business.category) == normalizeText(category)
 
             matchesQuery && matchesCategory
         }

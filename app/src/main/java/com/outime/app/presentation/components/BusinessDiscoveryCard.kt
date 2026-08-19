@@ -30,8 +30,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.outime.app.R
 import com.outime.app.domain.model.Business as BusinessModel
+import com.outime.app.presentation.util.businessThumbnailRes
 
 /**
  * Tarjeta de negocio estilo "discovery" con imagen/thumbnail lateral,
@@ -59,12 +59,12 @@ fun BusinessDiscoveryCard(
                 .fillMaxWidth()
                 .height(112.dp)
         ) {
-            // Imagen / thumbnail del negocio
-            // Solo existe imagen local para "Peluquería Chicas"; para el resto,
-            // placeholder visual elegante con icono Store.
-            if (business.name.equals("Peluquería Chicas", ignoreCase = true)) {
+            // Imagen / thumbnail del negocio. Se usan recursos locales del APK por
+            // nombre normalizado; si no hay imagen, placeholder con icono Store.
+            val thumbnailRes = businessThumbnailRes(business.name)
+            if (thumbnailRes != null) {
                 androidx.compose.foundation.Image(
-                    painter = painterResource(id = R.drawable.banner_peluqueria_chicas),
+                    painter = painterResource(id = thumbnailRes),
                     contentDescription = "Imagen de ${business.name}",
                     modifier = Modifier
                         .width(112.dp)

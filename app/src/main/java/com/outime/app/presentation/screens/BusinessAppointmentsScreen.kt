@@ -421,8 +421,11 @@ private fun BusinessAppointmentCard(
                 }
             }
 
-            // Acciones solo si está confirmada
-            if (appointment.status == AppointmentStatus.CONFIRMED) {
+            // Acciones solo si la cita sigue confirmada y su fecha no ha pasado.
+            // Una cita pasada no se modifica: se ocultan Completar/Cancelar sin
+            // cambiar su status ni tocarla en Firestore (se mantiene en historial).
+            val isAppointmentUpcoming = appointment.dateTime > System.currentTimeMillis()
+            if (appointment.status == AppointmentStatus.CONFIRMED && isAppointmentUpcoming) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),

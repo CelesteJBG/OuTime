@@ -19,8 +19,12 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.ContentCut
-import androidx.compose.material.icons.filled.FaceRetouchingNatural
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MedicalServices
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Star
@@ -56,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import com.outime.app.R
 import com.outime.app.domain.model.User
 import com.outime.app.presentation.components.BusinessDiscoveryCard
+import com.outime.app.presentation.util.normalizeText
 import com.outime.app.presentation.viewmodel.AuthViewModel
 import com.outime.app.presentation.viewmodel.BusinessCatalogViewModel
 
@@ -66,24 +71,28 @@ private data class CategoryItem(
 
 private val CATEGORIES = listOf(
     CategoryItem("Todas", Icons.Default.Store),
-    CategoryItem("Peluquería", Icons.Default.ContentCut),
-    CategoryItem("Barbería", Icons.Default.ContentCut),
-    CategoryItem("Estética", Icons.Default.FaceRetouchingNatural),
-    CategoryItem("Masajes", Icons.Default.Spa),
-    CategoryItem("Uñas", Icons.Default.Spa)
+    CategoryItem("Salud", Icons.Default.MedicalServices),
+    CategoryItem("Automoción", Icons.Default.DirectionsCar),
+    CategoryItem("Belleza", Icons.Default.ContentCut),
+    CategoryItem("Tatuajes", Icons.Default.ColorLens),
+    CategoryItem("Bienestar", Icons.Default.Spa),
+    CategoryItem("Hogar", Icons.Default.Home),
+    CategoryItem("Educación", Icons.Default.School)
 )
 
 private data class DiscoverServiceItem(
     val title: String,
-    val imageRes: Int
+    val imageRes: Int,
+    /** Nombre normalizado del negocio objetivo (exacto, sin fallback). */
+    val targetName: String
 )
 
 private val DISCOVER_SERVICES = listOf(
-    DiscoverServiceItem("Clínica dental", R.drawable.servicio_clinica_dental),
-    DiscoverServiceItem("Taller mecánico", R.drawable.servicio_taller_mecanico),
-    DiscoverServiceItem("Fisioterapia", R.drawable.servicio_fisioterapia),
-    DiscoverServiceItem("Peluquería", R.drawable.servicio_peluqueria),
-    DiscoverServiceItem("Estudio tatuaje", R.drawable.servicio_estudio_tatto)
+    DiscoverServiceItem("Clínica dental", R.drawable.servicio_clinica_dental, targetName = "clinica"),
+    DiscoverServiceItem("Taller mecánico", R.drawable.servicio_taller_mecanico, targetName = "taller"),
+    DiscoverServiceItem("Fisioterapia", R.drawable.servicio_fisioterapia, targetName = "fisio"),
+    DiscoverServiceItem("Peluquería", R.drawable.servicio_peluqueria, targetName = "peluquer"),
+    DiscoverServiceItem("Estudio tatuaje", R.drawable.servicio_estudio_tatto, targetName = "tatto")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -264,10 +273,14 @@ fun ClientHomeScreen(
                         DiscoverServiceCard(
                             service = service,
                             onClick = {
-                                // Reutilizar el flujo existente: navegar al primer
-                                // negocio disponible (asociación dinámica segura).
-                                uiState.businesses.firstOrNull()?.let { business ->
-                                    onNavigateToDetail(business.id)
+                                // Navegar SOLO al negocio objetivo por nombre normalizado.
+                                // Si no se encuentra, no se navega a ningún otro negocio
+                                // ni se usa ningún negocio como fallback.
+                                val target = uiState.businesses.find { business ->
+                                    normalizeText(business.name).contains(service.targetName)
+                                }
+                                if (target != null) {
+                                    onNavigateToDetail(target.id)
                                 }
                             }
                         )
@@ -388,10 +401,14 @@ fun ClientHomeScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = if (uiState.searchQuery.isNotBlank() || uiState.selectedCategory != null)
-                                "No se encontraron negocios con ese filtro."
-                            else
-                                "Aún no hay negocios disponibles.",
+                            text = when {
+                                uiState.selectedCategory != null ->
+                                    "No hay negocios disponibles en esta categoría."
+                                uiState.searchQuery.isNotBlank() ->
+                                    "No se encontraron negocios con estos filtros."
+                                else ->
+                                    "Aún no hay negocios disponibles."
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

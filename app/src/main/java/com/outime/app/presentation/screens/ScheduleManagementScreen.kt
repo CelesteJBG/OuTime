@@ -14,11 +14,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -42,6 +43,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.TimePicker
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -52,8 +55,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.outime.app.domain.model.BlockedDate
 import com.outime.app.domain.model.BusinessSchedule
@@ -91,14 +95,13 @@ fun ScheduleManagementScreen(
         }
     }
 
-    // Reaccionar al éxito del guardado
+    // Reaccionar al éxito del guardado: permanecer en la pantalla y mostrar confirmación.
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
             scheduleViewModel.resetState()
             scope.launch {
-                snackbarHostState.showSnackbar("Disponibilidad guardada correctamente")
+                snackbarHostState.showSnackbar("Horario actualizado correctamente")
             }
-            onNavigateBack()
         }
     }
 
@@ -499,6 +502,7 @@ private fun TurnoEditor(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TimeField(
     value: String,
@@ -506,30 +510,88 @@ private fun TimeField(
     placeholder: String,
     modifier: Modifier = Modifier
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(placeholder) },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Filled.Schedule,
-                contentDescription = "Hora",
-                modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        },
-        modifier = modifier,
-        singleLine = true,
-        shape = MaterialTheme.shapes.small,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-            focusedContainerColor = MaterialTheme.colorScheme.background,
-            unfocusedContainerColor = MaterialTheme.colorScheme.background
-        ),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+    var showPicker by remember { mutableStateOf(false) }
+    val pickerState = rememberTimePickerState(
+        initialHour = parseHours(value),
+        initialMinute = parseMinutes(value),
+        is24Hour = true
     )
+
+    Box(modifier = modifier) {
+        // Campo visualmente idéntico al original, solo lectura: la interacción
+        // principal es el selector visual mediante el TimePicker.
+        OutlinedTextField(
+            value = value,
+            onValueChange = {},
+            placeholder = { Text(placeholder) },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.Schedule,
+                    contentDescription = "Hora",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            readOnly = true,
+            singleLine = true,
+            shape = MaterialTheme.shapes.small,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                focusedContainerColor = MaterialTheme.colorScheme.background,
+                unfocusedContainerColor = MaterialTheme.colorScheme.background
+            )
+        )
+
+        // Superficie clicable encima del campo que abre el selector de hora.
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable { showPicker = true }
+                .semantics { contentDescription = "Seleccionar hora" }
+        )
+    }
+
+    if (showPicker) {
+        AlertDialog(
+            onDismissRequest = { showPicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    onValueChange(
+                        String.format(
+                            Locale.getDefault(),
+                            "%02d:%02d",
+                            pickerState.hour,
+                            pickerState.minute
+                        )
+                    )
+                    showPicker = false
+                }) {
+                    Text("Aceptar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPicker = false }) {
+                    Text("Cancelar")
+                }
+            },
+            text = {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
+                    TimePicker(state = pickerState)
+                }
+            }
+        )
+    }
 }
+
+/** Extrae la hora (0-23) de un valor "HH:mm"; por defecto 9 si no es válido. */
+private fun parseHours(time: String): Int =
+    time.substringBefore(':', "").toIntOrNull()?.coerceIn(0, 23) ?: 9
+
+/** Extrae los minutos (0-59) de un valor "HH:mm"; por defecto 0 si no es válido. */
+private fun parseMinutes(time: String): Int =
+    time.substringAfter(':', "").toIntOrNull()?.coerceIn(0, 59) ?: 0
 
 @Composable
 private fun HorizontalDivider() {

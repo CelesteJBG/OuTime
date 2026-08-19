@@ -108,9 +108,9 @@ fun ClientProfileScreen(
         .filter { it.status == AppointmentStatus.CONFIRMED && it.dateTime >= now }
         .minByOrNull { it.dateTime }
 
-    // ── Última reserva real (la más reciente en el tiempo) ────────────────
+    // ── Última reserva real (la más reciente en el tiempo, sin canceladas) ────
     val ultimaReserva = appointments
-        .filter { it.dateTime <= now }
+        .filter { it.dateTime <= now && it.status != AppointmentStatus.CANCELLED }
         .maxByOrNull { it.dateTime }
 
     val dateTimeFormat = remember { SimpleDateFormat("d MMM, HH:mm", Locale.forLanguageTag("es-ES")) }

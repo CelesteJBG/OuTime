@@ -52,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.outime.app.domain.model.AppointmentStatus
 import com.outime.app.presentation.components.TimeSlotItem
 import com.outime.app.presentation.model.TimeSlot
 import com.outime.app.presentation.viewmodel.AppointmentViewModel
@@ -74,8 +75,7 @@ fun BookingScreen(
     servicePrice: Double,
     appointmentViewModel: AppointmentViewModel,
     scheduleViewModel: ScheduleViewModel,
-    onNavigateBack: () -> Unit,
-    onBookingSuccess: () -> Unit
+    onNavigateBack: () -> Unit
 ) {
     val scheduleUiState by scheduleViewModel.uiState.collectAsState()
     val appointmentUiState by appointmentViewModel.uiState.collectAsState()
@@ -191,7 +191,11 @@ fun BookingScreen(
                 schedule = schedule,
                 dateMillis = startOfDay,
                 durationMinutes = durationMinutes,
-                existingAppointments = appointmentUiState.dayAppointments
+                existingAppointments = appointmentUiState.dayAppointments.filter {
+                        // Las citas canceladas no bloquean la franja: liberan la
+                        // disponibilidad para nuevas reservas (el historial se conserva).
+                        it.status != AppointmentStatus.CANCELLED
+                    }
             )
             timeSlots = slots
         }

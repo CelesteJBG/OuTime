@@ -1,6 +1,7 @@
 package com.outime.app.presentation.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
@@ -47,11 +49,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.outime.app.domain.model.Service
+import com.outime.app.presentation.util.businessThumbnailRes
 import com.outime.app.presentation.viewmodel.BusinessCatalogViewModel
 import java.util.Locale
 
@@ -149,6 +155,21 @@ fun BusinessDetailScreen(
                                 .background(MaterialTheme.colorScheme.surface)
                                 .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 20.dp)
                         ) {
+                            // Imagen de perfil del negocio (si existe recurso local del APK).
+                            val thumbnailRes = businessThumbnailRes(business.name)
+                            if (thumbnailRes != null) {
+                                Image(
+                                    painter = painterResource(id = thumbnailRes),
+                                    contentDescription = "Imagen de ${business.name}",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(170.dp)
+                                        .clip(RoundedCornerShape(16.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+                                Spacer(modifier = Modifier.height(14.dp))
+                            }
+
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(14.dp)
@@ -280,7 +301,7 @@ fun BusinessDetailScreen(
                         ) {
                             Text(
                                 text = if (selectedService != null)
-                                    "Reservar ${selectedService!!.name}"
+                                    "Reservar servicio"
                                 else
                                     "Selecciona un servicio",
                                 style = MaterialTheme.typography.labelLarge,

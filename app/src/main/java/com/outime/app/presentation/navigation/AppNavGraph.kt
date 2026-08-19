@@ -267,13 +267,8 @@ fun AppNavGraph() {
                     authViewModel = authViewModel,
                     appointmentViewModel = appointmentViewModel,
                     onNavigateToAppointments = {
-                        navController.navigate(Routes.CLIENT_APPOINTMENTS) {
-                            popUpTo(Routes.CLIENT_HOME) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        // Desde Perfil: push simple para volver a Perfil con Atrás.
+                        navController.navigate(Routes.CLIENT_APPOINTMENTS)
                     },
                     onNavigateToEdit = {
                         navController.navigate(Routes.CLIENT_PROFILE_EDIT)
@@ -371,22 +366,12 @@ fun AppNavGraph() {
                     businessViewModel = businessViewModel,
                     serviceViewModel = serviceViewModel,
                     onNavigateToServices = {
-                        navController.navigate(Routes.BUSINESS_SERVICES) {
-                            popUpTo(Routes.BUSINESS_HOME) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        // Desde Perfil: push simple para volver a Perfil con Atrás.
+                        navController.navigate(Routes.BUSINESS_SERVICES)
                     },
                     onNavigateToSchedule = {
-                        navController.navigate(Routes.SCHEDULE_MANAGEMENT) {
-                            popUpTo(Routes.BUSINESS_HOME) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        // Desde Perfil: push simple para volver a Perfil con Atrás.
+                        navController.navigate(Routes.SCHEDULE_MANAGEMENT)
                     },
                     onNavigateToEdit = {
                         navController.navigate(Routes.BUSINESS_PROFILE_EDIT)
@@ -501,11 +486,6 @@ fun AppNavGraph() {
                     scheduleViewModel = scheduleViewModel,
                     onNavigateBack = {
                         navController.popBackStack()
-                    },
-                    onBookingSuccess = {
-                        navController.navigate(Routes.CLIENT_HOME) {
-                            popUpTo(Routes.CLIENT_HOME) { inclusive = true }
-                        }
                     }
                 )
             }
