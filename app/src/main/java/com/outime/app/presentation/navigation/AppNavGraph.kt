@@ -5,6 +5,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -23,12 +24,14 @@ import com.outime.app.data.repository.ServiceRepositoryImpl
 import com.outime.app.presentation.components.OuTimeBottomNavigation
 import com.outime.app.presentation.screens.BookingScreen
 import com.outime.app.presentation.screens.BusinessAppointmentsScreen
+import com.outime.app.presentation.screens.BusinessQrScanScreen
 import com.outime.app.presentation.screens.BusinessDetailScreen
 import com.outime.app.presentation.screens.BusinessHomeScreen
 import com.outime.app.presentation.screens.BusinessProfileScreen
 import com.outime.app.presentation.screens.BusinessServicesScreen
 import com.outime.app.presentation.screens.BusinessStatisticsScreen
 import com.outime.app.presentation.screens.ClientAppointmentsScreen
+import com.outime.app.presentation.screens.ClientQrScreen
 import com.outime.app.presentation.screens.ClientHomeScreen
 import com.outime.app.presentation.screens.ClientProfileScreen
 import com.outime.app.presentation.screens.CreateBusinessScreen
@@ -55,11 +58,13 @@ import com.outime.app.presentation.viewmodel.ServiceViewModel
 import com.outime.app.presentation.viewmodel.ServiceViewModelFactory
 import com.outime.app.presentation.viewmodel.StatisticsViewModel
 import com.outime.app.presentation.viewmodel.StatisticsViewModelFactory
+import kotlinx.coroutines.launch
 
 @Composable
 fun AppNavGraph() {
 
     val navController = rememberNavController()
+    val scope = rememberCoroutineScope()
 
     val authRepository = AuthRepositoryImpl(
         firebaseAuth = FirebaseAuth.getInstance(),
@@ -196,9 +201,13 @@ fun AppNavGraph() {
                 LoginScreen(
                     authViewModel = authViewModel,
                     onLoginSuccess = {
-                        navController.navigate(Routes.SPLASH) {
-                            popUpTo(Routes.LOGIN) {
-                                inclusive = true
+                        scope.launch {
+                            navController.navigate(
+                                resolvePostLoginDestination(authViewModel, businessViewModel)
+                            ) {
+                                popUpTo(Routes.LOGIN) {
+                                    inclusive = true
+                                }
                             }
                         }
                     },
@@ -218,8 +227,12 @@ fun AppNavGraph() {
                         navController.popBackStack()
                     },
                     onRegisterSuccess = {
-                        navController.navigate(Routes.SPLASH) {
-                            popUpTo(Routes.REGISTER) { inclusive = true }
+                        scope.launch {
+                            navController.navigate(
+                                resolvePostLoginDestination(authViewModel, businessViewModel)
+                            ) {
+                                popUpTo(Routes.REGISTER) { inclusive = true }
+                            }
                         }
                     }
                 )
@@ -256,6 +269,9 @@ fun AppNavGraph() {
                 ClientAppointmentsScreen(
                     clientId = clientId,
                     appointmentViewModel = appointmentViewModel,
+                    onNavigateToQr = { appointmentId ->
+                        navController.navigate(Routes.clientQr(appointmentId))
+                    },
                     onNavigateBack = {
                         navController.popBackStack()
                     }
@@ -290,7 +306,6 @@ fun AppNavGraph() {
                     serviceViewModel = serviceViewModel,
                     businessViewModel = businessViewModel,
                     appointmentViewModel = appointmentViewModel,
-                    authViewModel = authViewModel,
                     onNavigateToCreateService = {
                         navController.navigate(Routes.CREATE_SERVICE)
                     },
@@ -311,12 +326,6 @@ fun AppNavGraph() {
                             launchSingleTop = true
                             restoreState = true
                         }
-                    },
-                    onLogout = {
-                        authViewModel.logout()
-                        navController.navigate(Routes.LOGIN) {
-                            popUpTo(0)
-                        }
                     }
                 )
             }
@@ -326,6 +335,9 @@ fun AppNavGraph() {
                 BusinessAppointmentsScreen(
                     businessId = businessId,
                     appointmentViewModel = appointmentViewModel,
+                    onNavigateToScan = {
+                        navController.navigate(Routes.BUSINESS_QR_SCAN)
+                    },
                     onNavigateBack = {
                         navController.popBackStack()
                     }
@@ -400,6 +412,34 @@ fun AppNavGraph() {
             }
 
             // ── Detail / Booking routes (no bottom bar) ─────────────
+
+            // QR de cita (cliente) — no bottom bar
+            composable(
+                route = Routes.CLIENT_QR,
+                arguments = listOf(
+                    navArgument("appointmentId") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val appointmentId = backStackEntry.arguments?.getString("appointmentId") ?: ""
+                ClientQrScreen(
+                    appointmentId = appointmentId,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            // Escáner de cita (negocio) — no bottom bar
+            composable(Routes.BUSINESS_QR_SCAN) {
+                val businessQrId = businessViewModel.currentBusinessId() ?: ""
+                BusinessQrScanScreen(
+                    businessId = businessQrId,
+                    appointmentViewModel = appointmentViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
 
             composable(
                 route = Routes.BUSINESS_DETAIL,

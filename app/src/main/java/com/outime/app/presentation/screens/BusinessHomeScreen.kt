@@ -2,6 +2,8 @@ package com.outime.app.presentation.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Group
@@ -57,8 +58,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.outime.app.R
 import com.outime.app.presentation.components.EmptyState
+import com.outime.app.presentation.model.BusinessCategory
 import com.outime.app.presentation.viewmodel.AppointmentViewModel
-import com.outime.app.presentation.viewmodel.AuthViewModel
 import com.outime.app.presentation.viewmodel.BusinessViewModel
 import com.outime.app.presentation.viewmodel.ServiceViewModel
 import java.util.Calendar
@@ -68,11 +69,9 @@ fun BusinessHomeScreen(
     serviceViewModel: ServiceViewModel,
     businessViewModel: BusinessViewModel,
     appointmentViewModel: AppointmentViewModel,
-    authViewModel: AuthViewModel,
     onNavigateToCreateService: () -> Unit,
     onNavigateToBusinessAppointments: () -> Unit,
-    onNavigateToBusinessServices: () -> Unit,
-    onLogout: () -> Unit
+    onNavigateToBusinessServices: () -> Unit
 ) {
     val serviceUiState by serviceViewModel.uiState.collectAsState()
     val businessUiState by businessViewModel.uiState.collectAsState()
@@ -174,6 +173,7 @@ fun BusinessHomeScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .height(IntrinsicSize.Min)
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
@@ -181,19 +181,19 @@ fun BusinessHomeScreen(
                         icon = Icons.Default.CalendarMonth,
                         value = "$appointmentsToday",
                         label = "Citas hoy",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                     MetricCard(
                         icon = Icons.Default.Group,
                         value = "$uniqueClients",
                         label = "Clientes",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                     MetricCard(
                         icon = Icons.Default.Star,
                         value = "${"%.0f".format(totalRevenue)} €",
                         label = "Ingresos",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     )
                 }
             }
@@ -213,6 +213,7 @@ fun BusinessHomeScreen(
                             .weight(1f)
                             .height(52.dp),
                         shape = MaterialTheme.shapes.medium,
+                        contentPadding = PaddingValues(horizontal = 10.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )
@@ -220,12 +221,16 @@ fun BusinessHomeScreen(
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = null,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier
+                                .size(20.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "Crear servicio",
-                            style = MaterialTheme.typography.labelLarge
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -236,6 +241,7 @@ fun BusinessHomeScreen(
                             .weight(1f)
                             .height(52.dp),
                         shape = MaterialTheme.shapes.medium,
+                        contentPadding = PaddingValues(horizontal = 10.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = MaterialTheme.colorScheme.primary
                         )
@@ -245,10 +251,13 @@ fun BusinessHomeScreen(
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "Mis citas",
-                            style = MaterialTheme.typography.labelLarge
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -312,43 +321,10 @@ fun BusinessHomeScreen(
                 items(serviceUiState.services) { service ->
                     ServiceCard(
                         serviceName = service.name,
+                        serviceDescription = service.description,
                         durationMinutes = service.durationMinutes,
                         price = service.price,
                         onClick = onNavigateToBusinessServices
-                    )
-                }
-            }
-
-            // ── Cerrar sesión ───────────────────────────────────────────
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedButton(
-                    onClick = {
-                        authViewModel.logout()
-                        onLogout()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .height(52.dp),
-                    shape = MaterialTheme.shapes.medium,
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(
-                        1.dp,
-                        MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Logout,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Cerrar sesión",
-                        style = MaterialTheme.typography.labelLarge
                     )
                 }
             }
@@ -369,18 +345,28 @@ private fun BusinessHeroCard(
     businessCategory: String,
     businessDescription: String
 ) {
+    val bannerRes = BusinessCategory.bannerFor(businessCategory)
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(200.dp)
     ) {
-        // Imagen de fondo — presencia visual completa
-        androidx.compose.foundation.Image(
-            painter = painterResource(id = R.drawable.banner_peluqueria_chicas),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+        // Imagen de fondo — determinada por la categoría del negocio
+        if (bannerRes != null) {
+            androidx.compose.foundation.Image(
+                painter = painterResource(id = bannerRes),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            // Categoría sin imagen asociada: fondo neutro en lugar de una imagen por defecto
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+            )
+        }
 
         // Degradado sutil: ligero scrim arriba → primary suave → background abajo
         // Mantiene visible la fotografía mientras garantiza legibilidad del texto
@@ -515,7 +501,7 @@ private fun MetricCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 12.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
@@ -529,7 +515,9 @@ private fun MetricCard(
                 text = value,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                softWrap = false
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
@@ -547,6 +535,7 @@ private fun MetricCard(
 @Composable
 private fun ServiceCard(
     serviceName: String,
+    serviceDescription: String,
     durationMinutes: Int,
     price: Double,
     onClick: () -> Unit
@@ -554,7 +543,7 @@ private fun ServiceCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp),
         shape = MaterialTheme.shapes.medium,
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(
@@ -565,22 +554,22 @@ private fun ServiceCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(64.dp),
+                .height(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Franja lateral
             Box(
                 modifier = Modifier
                     .width(4.dp)
-                    .fillMaxSize()
+                    .fillMaxHeight()
                     .background(MaterialTheme.colorScheme.primary)
             )
 
             // Contenido
             Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 16.dp),
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
@@ -594,6 +583,20 @@ private fun ServiceCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    if (serviceDescription.isNotBlank()) {
+                        Text(
+                            text = serviceDescription,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {

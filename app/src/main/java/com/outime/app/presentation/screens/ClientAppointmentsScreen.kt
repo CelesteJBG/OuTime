@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EventBusy
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -72,6 +73,7 @@ import java.util.Locale
 fun ClientAppointmentsScreen(
     clientId: String,
     appointmentViewModel: AppointmentViewModel,
+    onNavigateToQr: (String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val appointmentUiState by appointmentViewModel.uiState.collectAsState()
@@ -319,6 +321,7 @@ fun ClientAppointmentsScreen(
                         items(appointmentsForDate) { appointment ->
                             ClientAppointmentCard(
                                 appointment = appointment,
+                                onShowQr = { onNavigateToQr(appointment.id) },
                                 onCancel = {
                                     appointmentViewModel.updateAppointmentStatus(
                                         appointment.id,
@@ -337,6 +340,7 @@ fun ClientAppointmentsScreen(
 @Composable
 private fun ClientAppointmentCard(
     appointment: Appointment,
+    onShowQr: () -> Unit,
     onCancel: () -> Unit
 ) {
     val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
@@ -440,6 +444,25 @@ private fun ClientAppointmentCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("Cancelar", style = MaterialTheme.typography.labelLarge)
+                }
+            }
+
+            // Mostrar QR únicamente para citas CONFIRMADAS.
+            // Las citas canceladas y completadas no muestran QR.
+            if (appointment.status == AppointmentStatus.CONFIRMED) {
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedButton(
+                    onClick = onShowQr,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.QrCode2,
+                        contentDescription = "Mostrar código QR de la cita",
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Mostrar QR", style = MaterialTheme.typography.labelLarge)
                 }
             }
         }

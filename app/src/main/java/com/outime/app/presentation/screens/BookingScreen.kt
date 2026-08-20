@@ -43,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -53,8 +54,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.outime.app.domain.model.AppointmentStatus
+import com.outime.app.domain.model.BlockedDate
+import com.outime.app.domain.model.BusinessSchedule
 import com.outime.app.presentation.components.TimeSlotItem
 import com.outime.app.presentation.model.TimeSlot
+import com.outime.app.presentation.util.dayOfWeekOfUtcDate
+import com.outime.app.presentation.util.localEndOfDay
+import com.outime.app.presentation.util.localStartOfDay
+import com.outime.app.presentation.util.utcMidnight
+import com.outime.app.presentation.util.utcMidnightOfLocalDate
 import com.outime.app.presentation.viewmodel.AppointmentViewModel
 import com.outime.app.presentation.viewmodel.ScheduleViewModel
 import kotlinx.coroutines.launch
@@ -83,58 +91,61 @@ fun BookingScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Cargar horario y fechas bloqueadas del negocio al entrar
+    // Horario y fechas bloqueadas en tiempo real (listeners de Firestore). Se activan una
+    // única vez por entrada: el ViewModel mantiene la suscripción y el estado se actualiza
+    // automáticamente cuando el negocio cambia horarios o bloquea/desbloquea fechas.
     LaunchedEffect(businessId) {
-        scheduleViewModel.loadSchedule(businessId)
-        scheduleViewModel.loadBlockedDates(businessId)
+        scheduleViewModel.observeSchedule(businessId)
+        scheduleViewModel.observeBlockedDates(businessId)
+    }
+
+    // Huella de la disponibilidad (horario semanal + fechas bloqueadas). Al cambiar
+    // (p. ej. el negocio acaba de bloquear una fecha), forzamos que el DatePicker se
+    // reconstruya y recalcule qué días se pueden seleccionar, reflejando al instante
+    // las fechas bloqueadas y los días apagados.
+    val availabilitySignature = remember(scheduleUiState.schedule, scheduleUiState.blockedDates) {
+        val weekly = scheduleUiState.schedule?.weeklyHours
+            ?.entries
+            ?.map { (k, v) ->
+                "$k:${v.isOpen}:${v.morningStart}:${v.morningEnd}:${v.afternoonStart}:${v.afternoonEnd}"
+            }
+            ?.sorted()
+            ?.joinToString("|")
+            .orEmpty()
+        val blocked = scheduleUiState.blockedDates
+            .map { it.date }
+            .sorted()
+            .joinToString(",")
+        "$weekly#$blocked"
     }
 
     // Estado del calendario
-    val datePickerState = rememberDatePickerState(
-        selectableDates = object : SelectableDates {
-            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                // 1. No fechas pasadas (comparar a medianoche)
-                val todayMidnight = Calendar.getInstance().apply {
-                    set(Calendar.HOUR_OF_DAY, 0)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                }.timeInMillis
+    val datePickerState = key(availabilitySignature) {
+        rememberDatePickerState(
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    // 1. No fechas pasadas (comparación de fecha de calendario en UTC)
+                    val todayUtcMid = utcMidnight(System.currentTimeMillis())
+                    val candidateUtcMid = utcMidnight(utcTimeMillis)
+                    if (candidateUtcMid < todayUtcMid) return false
 
-                val candidateMidnight = Calendar.getInstance().apply {
-                    timeInMillis = utcTimeMillis
-                    set(Calendar.HOUR_OF_DAY, 0)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                }.timeInMillis
+                    // 2. Día de la semana laborable (semántica de FECHA: se lee en UTC para
+                    //    no desplazar la fecha elegida a la zona horaria local)
+                    val schedule = scheduleUiState.schedule ?: return true
+                    val dayOfWeek = dayOfWeekOfUtcDate(candidateUtcMid)
 
-                if (candidateMidnight < todayMidnight) return false
+                    val daySchedule = schedule.weeklyHours[dayOfWeek]
+                    if (daySchedule == null || !daySchedule.isOpen) return false
 
-                // 2. Día de la semana laborable
-                val schedule = scheduleUiState.schedule ?: return true
-                val dayOfWeek = Calendar.getInstance().apply {
-                    timeInMillis = utcTimeMillis
-                }.get(Calendar.DAY_OF_WEEK)
-
-                val daySchedule = schedule.weeklyHours[dayOfWeek]
-                if (daySchedule == null || !daySchedule.isOpen) return false
-
-                // 3. No está en fechas bloqueadas
-                val isBlocked = scheduleUiState.blockedDates.any { blocked ->
-                    val blockedMidnight = Calendar.getInstance().apply {
-                        timeInMillis = blocked.date
-                        set(Calendar.HOUR_OF_DAY, 0)
-                        set(Calendar.MINUTE, 0)
-                        set(Calendar.SECOND, 0)
-                        set(Calendar.MILLISECOND, 0)
-                    }.timeInMillis
-                    blockedMidnight == candidateMidnight
+                    // 3. No está en fechas bloqueadas (misma clave UTC de fecha)
+                    val isBlocked = scheduleUiState.blockedDates.any { blocked ->
+                        utcMidnight(blocked.date) == candidateUtcMid
+                    }
+                    return !isBlocked
                 }
-                return !isBlocked
             }
-        }
-    )
+        )
+    }
 
     // Franja horaria seleccionada por el usuario
     var selectedTimeSlot by remember { mutableStateOf<TimeSlot?>(null) }
@@ -151,21 +162,8 @@ fun BookingScreen(
         selectedTimeSlot = null
 
         if (dateMillis != null && schedule != null) {
-            val startOfDay = Calendar.getInstance().apply {
-                timeInMillis = dateMillis
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.timeInMillis
-
-            val endOfDay = Calendar.getInstance().apply {
-                timeInMillis = dateMillis
-                set(Calendar.HOUR_OF_DAY, 23)
-                set(Calendar.MINUTE, 59)
-                set(Calendar.SECOND, 59)
-                set(Calendar.MILLISECOND, 999)
-            }.timeInMillis
+            val startOfDay = localStartOfDay(dateMillis)
+            val endOfDay = localEndOfDay(dateMillis)
 
             appointmentViewModel.loadAppointmentsByBusinessAndDate(businessId, startOfDay, endOfDay)
         } else {
@@ -174,18 +172,12 @@ fun BookingScreen(
     }
 
     // 2) Cuando llegan las citas del día (o cambia el horario), regenerar las franjas
-    LaunchedEffect(appointmentUiState.dayAppointments, scheduleUiState.schedule, datePickerState.selectedDateMillis) {
+    LaunchedEffect(appointmentUiState.dayAppointments, scheduleUiState.schedule, scheduleUiState.blockedDates, datePickerState.selectedDateMillis) {
         val dateMillis = datePickerState.selectedDateMillis
         val schedule = scheduleUiState.schedule
 
         if (dateMillis != null && schedule != null) {
-            val startOfDay = Calendar.getInstance().apply {
-                timeInMillis = dateMillis
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.timeInMillis
+            val startOfDay = localStartOfDay(dateMillis)
 
             val slots = scheduleViewModel.generateTimeSlots(
                 schedule = schedule,
@@ -195,7 +187,8 @@ fun BookingScreen(
                         // Las citas canceladas no bloquean la franja: liberan la
                         // disponibilidad para nuevas reservas (el historial se conserva).
                         it.status != AppointmentStatus.CANCELLED
-                    }
+                    },
+                blockedDates = scheduleUiState.blockedDates
             )
             timeSlots = slots
         }
@@ -213,21 +206,8 @@ fun BookingScreen(
             // Recargar las citas del día para que la franja se marque como ocupada
             val dateMillis = datePickerState.selectedDateMillis
             if (dateMillis != null) {
-                val startOfDay = Calendar.getInstance().apply {
-                    timeInMillis = dateMillis
-                    set(Calendar.HOUR_OF_DAY, 0)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                }.timeInMillis
-
-                val endOfDay = Calendar.getInstance().apply {
-                    timeInMillis = dateMillis
-                    set(Calendar.HOUR_OF_DAY, 23)
-                    set(Calendar.MINUTE, 59)
-                    set(Calendar.SECOND, 59)
-                    set(Calendar.MILLISECOND, 999)
-                }.timeInMillis
+                val startOfDay = localStartOfDay(dateMillis)
+                val endOfDay = localEndOfDay(dateMillis)
 
                 appointmentViewModel.loadAppointmentsByBusinessAndDate(businessId, startOfDay, endOfDay)
             }
@@ -480,6 +460,25 @@ fun BookingScreen(
                 Button(
                     onClick = {
                         val slot = selectedTimeSlot ?: return@Button
+
+                        // Refuerzo anti-carrera: en el instante de confirmar se revalida que
+                        // la fecha siga disponible (no bloqueada ni con el día apagado), aunque
+                        // la data en pantalla haya quedado desactualizada por un bloqueo previo.
+                        val stillAvailable = isBookingDateStillAvailable(
+                            dateMillis = slot.startMillis,
+                            schedule = scheduleUiState.schedule,
+                            blockedDates = scheduleUiState.blockedDates
+                        )
+                        if (!stillAvailable) {
+                            selectedTimeSlot = null
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    "Ese día ya no está disponible. Elige otra fecha."
+                                )
+                            }
+                            return@Button
+                        }
+
                         appointmentViewModel.createAppointment(
                             clientId = clientId,
                             businessId = businessId,
@@ -519,4 +518,39 @@ fun BookingScreen(
             }
         }
     }
+}
+/**
+ * Revalida en el momento de confirmar la cita que la fecha siga siendo reservable
+ * (no es una fecha bloqueada por el negocio ni un día apagado en el horario semanal).
+ *
+ * Es una mitigación del hueco de concurrencia (race condition) descrito en
+ * AppointmentRepositoryImpl.createAppointment. Nótese que el calendario de Material3
+ * puede mostrar un día como seleccionable aunque la data haya cambiado mientras se
+ * visualizaba; esta comprobación evita reservar sobre una fecha que quedó bloqueada.
+ */
+private fun isBookingDateStillAvailable(
+    dateMillis: Long,
+    schedule: BusinessSchedule?,
+    blockedDates: List<BlockedDate>
+): Boolean {
+    // [dateMillis] es el instante local del inicio de la franja. Obtenemos la clave UTC
+    // de su día de calendario (equivalente a la representación canónica de las fechas
+    // bloqueadas).
+    val dateKey = utcMidnightOfLocalDate(dateMillis)
+
+    // Fecha bloqueada por el negocio (misma representación canónica UTC)
+    val isBlocked = blockedDates.any { blocked ->
+        utcMidnight(blocked.date) == dateKey
+    }
+    if (isBlocked) return false
+
+    // Día apagado en el horario semanal (la franja es un instante local -> weekday local)
+    if (schedule != null) {
+        val dayOfWeek = Calendar.getInstance().apply { timeInMillis = dateMillis }
+            .get(Calendar.DAY_OF_WEEK)
+        val daySchedule = schedule.weeklyHours[dayOfWeek]
+        if (daySchedule == null || !daySchedule.isOpen) return false
+    }
+
+    return true
 }

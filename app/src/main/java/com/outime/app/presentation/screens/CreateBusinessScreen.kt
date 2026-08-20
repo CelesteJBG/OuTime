@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.Button
@@ -40,7 +39,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.outime.app.presentation.components.BusinessCategorySelector
 import com.outime.app.presentation.viewmodel.BusinessViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,10 +60,21 @@ fun CreateBusinessScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    var successHandled by remember { mutableStateOf(false) }
+
     LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) {
+        if (uiState.isSuccess && !successHandled) {
+            successHandled = true
             businessViewModel.resetState()
-            onBusinessCreated()
+            // Mensaje de éxito visible antes de navegar al Home (sin bloquear el flujo).
+            scope.launch {
+                snackbarHostState.showSnackbar("Negocio creado correctamente")
+            }
+            // Retardo mínimo justificado: mantiene el Snackbar visible durante la navegación.
+            scope.launch {
+                delay(1100)
+                onBusinessCreated()
+            }
         }
     }
 
@@ -157,25 +169,15 @@ fun CreateBusinessScreen(
                     )
                 )
 
-                OutlinedTextField(
-                    value = category,
-                    onValueChange = { category = it },
-                    label = { Text("Categoría") },
-                    modifier = Modifier.fillMaxWidth(),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Category,
-                            contentDescription = null
-                        )
-                    },
-                    singleLine = true,
-                    shape = MaterialTheme.shapes.medium,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                        focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
-                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Text(
+                    text = "Categoría",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                BusinessCategorySelector(
+                    selected = category,
+                    onSelected = { category = it }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))

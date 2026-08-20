@@ -27,6 +27,17 @@ class BusinessViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
+            // Regla de producto: una cuenta BUSINESS tiene un único negocio.
+            val existing = businessRepository.getBusinessByOwnerId(ownerId).getOrNull()
+            if (existing != null) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    isSuccess = true,
+                    business = existing
+                )
+                return@launch
+            }
+
             val business = Business(
                 ownerId = ownerId,
                 name = name,
@@ -37,10 +48,13 @@ class BusinessViewModel(
             val result = businessRepository.createBusiness(business)
 
             result.fold(
-                onSuccess = {
+                onSuccess = { createdBusiness ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        isSuccess = true
+                        isSuccess = true,
+                        // El negocio recién creado (con su id real de Firestore) queda en el
+                        // estado para que Home pueda cargar sus datos de inmediato.
+                        business = createdBusiness
                     )
                 },
                 onFailure = { error ->

@@ -156,7 +156,7 @@ fun BusinessDetailScreen(
                                 .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 20.dp)
                         ) {
                             // Imagen de perfil del negocio (si existe recurso local del APK).
-                            val thumbnailRes = businessThumbnailRes(business.name)
+                            val thumbnailRes = businessThumbnailRes(business.category)
                             if (thumbnailRes != null) {
                                 Image(
                                     painter = painterResource(id = thumbnailRes),

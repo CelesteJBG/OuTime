@@ -62,11 +62,13 @@ import androidx.compose.ui.unit.dp
 import com.outime.app.domain.model.BlockedDate
 import com.outime.app.domain.model.BusinessSchedule
 import com.outime.app.domain.model.DaySchedule
+import com.outime.app.presentation.util.utcMidnight
 import com.outime.app.presentation.viewmodel.ScheduleViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,10 +84,11 @@ fun ScheduleManagementScreen(
     // Estado editable local del horario (se inicializa cuando se carga del ViewModel)
     var editableSchedule by remember { mutableStateOf<BusinessSchedule?>(null) }
 
-    // Cargar datos al entrar
+    // Datos en tiempo real (listeners de Firestore): horario y fechas bloqueadas se
+    // actualizan solos al entrar y cuando cambian, sin necesidad de re-entrar.
     LaunchedEffect(businessId) {
-        scheduleViewModel.loadSchedule(businessId)
-        scheduleViewModel.loadBlockedDates(businessId)
+        scheduleViewModel.observeSchedule(businessId)
+        scheduleViewModel.observeBlockedDates(businessId)
     }
 
     // Cuando se carga el horario, inicializar el estado editable
@@ -608,7 +611,13 @@ private fun BlockedDateItem(
     blockedDate: BlockedDate,
     onRemove: () -> Unit
 ) {
-    val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
+    val dateFormatter = remember {
+        // Se formatea en UTC para mostrar exactamente la fecha de calendario almacenada
+        // (el valor se guarda como medianoche UTC), sin desplazarla por la zona horaria.
+        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -652,16 +661,9 @@ private fun BlockedDateItem(
 }
 
 /**
- * Normaliza un timestamp a medianoche en la zona horaria local.
- * El DatePicker de Material3 devuelve UTC millis, hay que convertirlo.
+ * Normaliza un timestamp a la medianoche UTC de la fecha de calendario que representa.
+ * El DatePicker de Material3 ya devuelve los millis UTC del día elegido, así que esta
+ * función es idempotente sobre ese valor y evita desplazarlo a la zona horaria local.
  */
-private fun normalizeToMidnight(utcMillis: Long): Long {
-    val calendar = Calendar.getInstance().apply {
-        timeInMillis = utcMillis
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }
-    return calendar.timeInMillis
-}
+private fun normalizeToMidnight(utcMillis: Long): Long =
+    utcMidnight(utcMillis)

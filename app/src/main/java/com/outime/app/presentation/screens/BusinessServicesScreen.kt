@@ -49,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -304,6 +305,17 @@ private fun ServiceCard(
                             modifier = Modifier.size(18.dp)
                         )
                     }
+                }
+
+                // Descripción (tamaño menor, color secundario)
+                if (service.description.isNotBlank()) {
+                    Text(
+                        text = service.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 // Información secundaria: duración + precio

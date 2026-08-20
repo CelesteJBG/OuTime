@@ -142,18 +142,14 @@ fun CreateServiceScreen(
                 .padding(innerPadding)
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier.fillMaxSize()
             ) {
-                // ── Subtítulo descriptivo (zona blanca) ────────────────────
+                // ── Zona blanca: subtítulo que extiende el fondo del TopAppBar ──
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surface)
-                        .padding(top = 4.dp, bottom = 20.dp)
+                        .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 20.dp)
                 ) {
                     Text(
                         text = "Añade un nuevo servicio que ofrecerás a tus clientes.",
@@ -163,13 +159,21 @@ fun CreateServiceScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // ── Contenido del formulario ───────────────────────────────
+                // ── Contenido desplazable del formulario ───────────────────
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // ── Contenido del formulario ───────────────────────────
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
                     // Selector de imagen local
                     ServiceImagePicker(
                         selectedImageUri = selectedImageUri,
@@ -290,6 +294,8 @@ fun CreateServiceScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
                 }
+                }
+
             }
 
             if (uiState.isLoading) {

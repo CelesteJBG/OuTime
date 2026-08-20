@@ -61,7 +61,7 @@ fun BusinessDiscoveryCard(
         ) {
             // Imagen / thumbnail del negocio. Se usan recursos locales del APK por
             // nombre normalizado; si no hay imagen, placeholder con icono Store.
-            val thumbnailRes = businessThumbnailRes(business.name)
+            val thumbnailRes = businessThumbnailRes(business.category)
             if (thumbnailRes != null) {
                 androidx.compose.foundation.Image(
                     painter = painterResource(id = thumbnailRes),

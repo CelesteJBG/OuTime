@@ -5,6 +5,9 @@ import com.outime.app.domain.model.BlockedDate
 import com.outime.app.domain.model.BusinessSchedule
 import com.outime.app.domain.model.DaySchedule
 import com.outime.app.domain.repository.ScheduleRepository
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class ScheduleRepositoryImpl(
@@ -23,29 +26,29 @@ class ScheduleRepositoryImpl(
             .get()
             .await()
 
-        if (!snapshot.exists()) {
-            Result.success(null)
-        } else {
-            // Firestore no soporta Map<Int, *> directamente: usamos String como clave puente
-            val raw = snapshot.data ?: emptyMap()
-            @Suppress("UNCHECKED_CAST")
-            val rawWeekly = raw["weeklyHours"] as? Map<String, Any> ?: emptyMap()
-            val weeklyHours = rawWeekly.mapNotNull { (key, value) ->
-                val dayKey = key.toIntOrNull() ?: return@mapNotNull null
-                @Suppress("UNCHECKED_CAST")
-                val dayMap = value as? Map<String, Any> ?: return@mapNotNull null
-                dayKey to mapToDaySchedule(dayMap)
-            }.toMap()
-
-            Result.success(
-                BusinessSchedule(
-                    businessId = businessId,
-                    weeklyHours = weeklyHours
-                )
-            )
-        }
+        Result.success(
+            if (snapshot.exists()) mapToSchedule(businessId, snapshot.data ?: emptyMap()) else null
+        )
     } catch (e: Exception) {
         Result.failure(e)
+    }
+
+    override fun observeSchedule(businessId: String): Flow<BusinessSchedule?> = callbackFlow {
+        val registration = firestore
+            .collection(SCHEDULES_COLLECTION)
+            .document(businessId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot == null || !snapshot.exists()) {
+                    trySend(null)
+                } else {
+                    trySend(mapToSchedule(businessId, snapshot.data ?: emptyMap()))
+                }
+            }
+        awaitClose { registration.remove() }
     }
 
     override suspend fun saveSchedule(schedule: BusinessSchedule): Result<Unit> = try {
@@ -85,6 +88,27 @@ class ScheduleRepositoryImpl(
         Result.failure(e)
     }
 
+    override fun observeBlockedDates(businessId: String): Flow<List<BlockedDate>> = callbackFlow {
+        val registration = firestore
+            .collection(BLOCKED_DATES_COLLECTION)
+            .whereEqualTo("businessId", businessId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val blockedDates = snapshot?.documents
+                    ?.mapNotNull { doc ->
+                        doc.toObject(BlockedDate::class.java)?.copy(id = doc.id)
+                    }
+                    .orEmpty()
+
+                trySend(blockedDates)
+            }
+        awaitClose { registration.remove() }
+    }
+
     override suspend fun addBlockedDate(blockedDate: BlockedDate): Result<Unit> = try {
         val docRef = firestore
             .collection(BLOCKED_DATES_COLLECTION)
@@ -108,6 +132,26 @@ class ScheduleRepositoryImpl(
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)
+    }
+
+    /**
+     * Convierte el mapa crudo de un documento de "business_schedules" a un [BusinessSchedule].
+     * Firestore no soporta Map<Int, *>: usamos String como clave puente.
+     */
+    private fun mapToSchedule(businessId: String, raw: Map<String, Any>): BusinessSchedule {
+        @Suppress("UNCHECKED_CAST")
+        val rawWeekly = raw["weeklyHours"] as? Map<String, Any> ?: emptyMap()
+        val weeklyHours = rawWeekly.mapNotNull { (key, value) ->
+            val dayKey = key.toIntOrNull() ?: return@mapNotNull null
+            @Suppress("UNCHECKED_CAST")
+            val dayMap = value as? Map<String, Any> ?: return@mapNotNull null
+            dayKey to mapToDaySchedule(dayMap)
+        }.toMap()
+
+        return BusinessSchedule(
+            businessId = businessId,
+            weeklyHours = weeklyHours
+        )
     }
 
     private fun mapToDaySchedule(map: Map<String, Any>): DaySchedule = DaySchedule(

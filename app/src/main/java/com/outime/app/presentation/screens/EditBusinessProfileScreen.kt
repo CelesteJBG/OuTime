@@ -1,6 +1,8 @@
 package com.outime.app.presentation.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import com.outime.app.domain.model.Business
 import com.outime.app.domain.model.User
 import com.outime.app.presentation.components.AccountEmailInfo
+import com.outime.app.presentation.components.BusinessCategorySelector
 import com.outime.app.presentation.components.ProfileEditField
 import com.outime.app.presentation.components.ProfileEditIcons
 import com.outime.app.presentation.viewmodel.AuthViewModel
@@ -126,6 +129,7 @@ fun EditBusinessProfileScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 24.dp, vertical = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -138,11 +142,15 @@ fun EditBusinessProfileScreen(
                     supportingText = nameError
                 )
 
-                ProfileEditField(
-                    value = category,
-                    onValueChange = { category = it },
-                    label = "Categoría",
-                    icon = ProfileEditIcons.Category
+                Text(
+                    text = "Categoría",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                BusinessCategorySelector(
+                    selected = category,
+                    onSelected = { category = it }
                 )
 
                 ProfileEditField(

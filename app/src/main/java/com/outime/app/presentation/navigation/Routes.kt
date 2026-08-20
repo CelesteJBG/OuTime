@@ -14,6 +14,12 @@ object Routes {
     const val BUSINESS_APPOINTMENTS = "business_appointments"
     const val CLIENT_APPOINTMENTS = "client_appointments"
 
+    const val CLIENT_QR = "client_qr/{appointmentId}"
+
+    fun clientQr(appointmentId: String) = "client_qr/$appointmentId"
+
+    const val BUSINESS_QR_SCAN = "business_qr_scan"
+
     const val EDIT_SERVICE = "edit_service/{serviceId}"
 
     fun editService(serviceId: String) = "edit_service/$serviceId"

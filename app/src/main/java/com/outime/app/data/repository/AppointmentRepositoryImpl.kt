@@ -15,6 +15,32 @@ class AppointmentRepositoryImpl(
     }
 
     override suspend fun createAppointment(appointment: Appointment): Result<Unit> = try {
+        // ⚠️ TODO (validación atómica a futuro — Race condition)
+        // ------------------------------------------------------------------
+        // Hoy la cita se crea sin comprobar de forma atómica que la fecha
+        // siga disponible. Aunque la UI (BookingScreen) ya revalida y escucha
+        // fechas bloqueadas en tiempo real, existe una ventana de concurrencia:
+        // el negocio puede bloquear una fecha (o apagar un día) justo mientras
+        // el cliente confirma, y esta escritura la aceptaría igual.
+        //
+        // Corrección recomendada (más robusta, nivel servidor y atómica):
+        //   1) Envolver esta escritura en una transacción de Firestore
+        //      (`firestore.runTransaction`) que:
+        //        - lea el documento `business_schedules/{appointment.businessId}` y
+        //          rechace si ese día de la semana está apagado (`isOpen == false`,
+        //          turnos en blanco o documento inexistente);
+        //        - compruebe en `blocked_dates` (filtrado por businessId) si el día
+        //          (medianoche local de `appointment.dateTime`) figura como bloqueado
+        //          y rechace en ese caso;
+        //        - compruebe que la franja no se solape con otra cita CONFIRMED
+        //          del negocio para esa fecha (evita dobles reservas simultáneas);
+        //        - y solo entonces realice el `set` de la cita.
+        //   2) Opcional / segunda capa de seguridad: añadir una regla de seguridad
+        //      en `firestore.rules` que impida una escritura en `appointments` si la
+        //      fecha está en `blocked_dates` o el día no está abierto en
+        //      `business_schedules`, de modo que el backend bloquee la carrera aunque
+        //      una app no actualizada intente reservar.
+        // ------------------------------------------------------------------
         val docRef = firestore
             .collection(APPOINTMENTS_COLLECTION)
             .document()

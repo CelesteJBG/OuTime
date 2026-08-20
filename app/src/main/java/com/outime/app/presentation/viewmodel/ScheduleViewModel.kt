@@ -8,6 +8,9 @@ import com.outime.app.domain.model.BusinessSchedule
 import com.outime.app.domain.model.DaySchedule
 import com.outime.app.domain.repository.ScheduleRepository
 import com.outime.app.presentation.model.TimeSlot
+import com.outime.app.presentation.util.utcMidnight
+import com.outime.app.presentation.util.utcMidnightOfLocalDate
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +23,52 @@ class ScheduleViewModel(
 
     private val _uiState = MutableStateFlow(ScheduleUiState())
     val uiState: StateFlow<ScheduleUiState> = _uiState.asStateFlow()
+
+    // Suscripciones en tiempo real (Firestore snapshot listeners). Se mantienen una por
+    // tipo de dato y se cancelan cuando se destruye el ViewModel.
+    private var scheduleJob: Job? = null
+    private var blockedDatesJob: Job? = null
+
+    /**
+     * Escucha en tiempo real el horario del negocio. La suscripción es idempotente:
+     * si ya hay una activa para este ViewModel no se duplica el listener.
+     */
+    fun observeSchedule(businessId: String) {
+        if (scheduleJob?.isActive == true) return
+        scheduleJob = viewModelScope.launch {
+            scheduleRepository.observeSchedule(businessId).collect { schedule ->
+                val effective = schedule ?: defaultSchedule(businessId)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = null,
+                    schedule = effective
+                )
+            }
+        }
+    }
+
+    /**
+     * Escucha en tiempo real las fechas bloqueadas del negocio. La suscripción es
+     * idempotente: si ya hay una activa para este ViewModel no se duplica el listener.
+     */
+    fun observeBlockedDates(businessId: String) {
+        if (blockedDatesJob?.isActive == true) return
+        blockedDatesJob = viewModelScope.launch {
+            scheduleRepository.observeBlockedDates(businessId).collect { blockedDates ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = null,
+                    blockedDates = blockedDates
+                )
+            }
+        }
+    }
+
+    override fun onCleared() {
+        scheduleJob?.cancel()
+        blockedDatesJob?.cancel()
+        super.onCleared()
+    }
 
     /**
      * Carga el horario del negocio. Si no existe, se usa un horario por defecto
@@ -161,7 +210,8 @@ class ScheduleViewModel(
         schedule: BusinessSchedule,
         dateMillis: Long,
         durationMinutes: Int,
-        existingAppointments: List<Appointment>
+        existingAppointments: List<Appointment>,
+        blockedDates: List<BlockedDate> = emptyList()
     ): List<TimeSlot> {
         val calendar = Calendar.getInstance().apply {
             timeInMillis = dateMillis
@@ -176,6 +226,11 @@ class ScheduleViewModel(
 
         val daySchedule = schedule.weeklyHours[dayOfWeek]
         if (daySchedule == null || !daySchedule.isOpen) {
+            return emptyList()
+        }
+
+        // Fecha específica bloqueada: no generar franjas (mismo comportamiento que un día cerrado).
+        if (isBlockedDate(dateMillis, blockedDates)) {
             return emptyList()
         }
 
@@ -211,6 +266,20 @@ class ScheduleViewModel(
         }
 
         return slots
+    }
+
+    /**
+     * Indica si la fecha de [dateMillis] coincide con alguna fecha bloqueada.
+     *
+     * [dateMillis] es un INSTANTE LOCAL (la medianoche local del día seleccionado,
+     * usada como base de las franjas), por lo que la clave de día se obtiene con
+     * [utcMidnightOfLocalDate]; las fechas bloqueadas se comparan por su medianoche UTC.
+     */
+    private fun isBlockedDate(dateMillis: Long, blockedDates: List<BlockedDate>): Boolean {
+        if (blockedDates.isEmpty()) return false
+
+        val dayKey = utcMidnightOfLocalDate(dateMillis)
+        return blockedDates.any { utcMidnight(it.date) == dayKey }
     }
 
     /**

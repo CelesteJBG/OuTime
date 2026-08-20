@@ -1,6 +1,6 @@
 package com.outime.app.presentation.util
 
-import com.outime.app.R
+import com.outime.app.presentation.model.BusinessCategory
 import java.text.Normalizer
 import java.util.Locale
 
@@ -19,18 +19,8 @@ fun normalizeText(input: String): String {
 }
 
 /**
- * Recurso de imagen local (empaquetado en el APK) para los negocios demo según su
- * nombre normalizado. Si no existe una imagen adecuada devuelve null y se mantiene
- * el placeholder visual.
+ * Recurso de imagen local (empaquetado en el APK) para un negocio según su
+ * CATEGORÍA. Delega en la fuente única [BusinessCategory]. Si la categoría no tiene
+ * imagen asociada devuelve null y se mantiene el placeholder visual.
  */
-fun businessThumbnailRes(name: String): Int? {
-    val n = normalizeText(name)
-    return when {
-        n.contains("clinica") -> R.drawable.servicio_clinica_dental
-        n.contains("taller") -> R.drawable.servicio_taller_mecanico
-        n.contains("fisio") -> R.drawable.servicio_fisioterapia
-        n.contains("peluquer") -> R.drawable.banner_peluqueria_chicas
-        n.contains("tatto") -> R.drawable.servicio_estudio_tatto
-        else -> null
-    }
-}
+fun businessThumbnailRes(category: String): Int? = BusinessCategory.bannerFor(category)

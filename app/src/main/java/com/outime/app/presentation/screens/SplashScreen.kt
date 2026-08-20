@@ -22,7 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.outime.app.R
-import com.outime.app.domain.model.UserRole
+import com.outime.app.presentation.navigation.Routes
+import com.outime.app.presentation.navigation.resolvePostLoginDestination
 import com.outime.app.presentation.viewmodel.AuthViewModel
 import com.outime.app.presentation.viewmodel.BusinessViewModel
 import kotlinx.coroutines.delay
@@ -77,32 +78,13 @@ fun SplashScreen(
 
         delay(1500)
 
-        if (!authViewModel.isUserLoggedIn()) {
-            onNavigateToLogin()
-            return@LaunchedEffect
-        }
+        val destination = resolvePostLoginDestination(authViewModel, businessViewModel)
 
-        val user = authViewModel.getCurrentUser()
-
-        when (user?.role) {
-
-            UserRole.CLIENT -> {
-                onNavigateToClientHome()
-            }
-
-            UserRole.BUSINESS -> {
-                val ownerId = authViewModel.currentUserId() ?: ""
-                val business = businessViewModel.getBusinessByOwnerId(ownerId)
-                if (business != null) {
-                    onNavigateToBusinessHome()
-                } else {
-                    onNavigateToCreateBusiness()
-                }
-            }
-
-            else -> {
-                onNavigateToLogin()
-            }
+        when (destination) {
+            Routes.CLIENT_HOME -> onNavigateToClientHome()
+            Routes.BUSINESS_HOME -> onNavigateToBusinessHome()
+            Routes.CREATE_BUSINESS -> onNavigateToCreateBusiness()
+            else -> onNavigateToLogin()
         }
     }
 }

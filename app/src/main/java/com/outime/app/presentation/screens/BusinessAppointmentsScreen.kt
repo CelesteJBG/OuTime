@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EventBusy
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -73,6 +74,7 @@ import java.util.Locale
 fun BusinessAppointmentsScreen(
     businessId: String,
     appointmentViewModel: AppointmentViewModel,
+    onNavigateToScan: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val appointmentUiState by appointmentViewModel.uiState.collectAsState()
@@ -138,6 +140,14 @@ fun BusinessAppointmentsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Volver"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onNavigateToScan) {
+                        Icon(
+                            imageVector = Icons.Filled.QrCodeScanner,
+                            contentDescription = "Escanear cita QR"
                         )
                     }
                 },

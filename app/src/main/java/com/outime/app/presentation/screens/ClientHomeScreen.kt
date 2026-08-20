@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import com.outime.app.R
 import com.outime.app.domain.model.User
 import com.outime.app.presentation.components.BusinessDiscoveryCard
+import com.outime.app.presentation.model.BusinessCategory
 import com.outime.app.presentation.util.normalizeText
 import com.outime.app.presentation.viewmodel.AuthViewModel
 import com.outime.app.presentation.viewmodel.BusinessCatalogViewModel
@@ -69,16 +70,17 @@ private data class CategoryItem(
     val icon: androidx.compose.ui.graphics.vector.ImageVector
 )
 
+private fun categoryIcon(category: BusinessCategory): androidx.compose.ui.graphics.vector.ImageVector = when (category) {
+    BusinessCategory.PELUQUERIA -> Icons.Default.ContentCut
+    BusinessCategory.CLINICA_DENTAL -> Icons.Default.MedicalServices
+    BusinessCategory.TALLER_MECANICO -> Icons.Default.DirectionsCar
+    BusinessCategory.ESTUDIO_TATUAJES -> Icons.Default.ColorLens
+    BusinessCategory.FISIOTERAPIA -> Icons.Default.Spa
+}
+
 private val CATEGORIES = listOf(
-    CategoryItem("Todas", Icons.Default.Store),
-    CategoryItem("Salud", Icons.Default.MedicalServices),
-    CategoryItem("Automoción", Icons.Default.DirectionsCar),
-    CategoryItem("Belleza", Icons.Default.ContentCut),
-    CategoryItem("Tatuajes", Icons.Default.ColorLens),
-    CategoryItem("Bienestar", Icons.Default.Spa),
-    CategoryItem("Hogar", Icons.Default.Home),
-    CategoryItem("Educación", Icons.Default.School)
-)
+    CategoryItem("Todas", Icons.Default.Store)
+) + BusinessCategory.categories.map { CategoryItem(it.label, categoryIcon(it)) }
 
 private data class DiscoverServiceItem(
     val title: String,

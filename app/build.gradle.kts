@@ -68,4 +68,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+
+    // QR de citas: generación (ZXing) y escaneo (Google Code Scanner)
+    implementation(libs.zxing.core)
+    implementation(libs.play.services.code.scanner)
 }

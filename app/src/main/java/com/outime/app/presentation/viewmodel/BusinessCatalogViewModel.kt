@@ -19,7 +19,23 @@ class BusinessCatalogViewModel(
     val uiState: StateFlow<BusinessCatalogUiState> = _uiState.asStateFlow()
 
     init {
-        loadBusinesses()
+        observeBusinesses()
+    }
+
+    private fun observeBusinesses() {
+        viewModelScope.launch {
+            businessRepository.getAllBusinessesFlow().collect { businesses ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    businesses = businesses,
+                    filteredBusinesses = applyFilters(
+                        businesses,
+                        _uiState.value.searchQuery,
+                        _uiState.value.selectedCategory
+                    )
+                )
+            }
+        }
     }
 
     fun loadBusinesses() {

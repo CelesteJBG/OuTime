@@ -184,6 +184,49 @@ class AppointmentViewModel(
         }
     }
 
+    /**
+     * Carga una cita escaneada por QR junto con el nombre de su cliente.
+     * Reutiliza [AppointmentRepository.getAppointmentById] y, para mostrar el nombre,
+     * [AuthRepository.getUserById]. El estado se expone en [AppointmentUiState.selectedAppointment]
+     * y [AppointmentUiState.scannedClientName]. La validación de negocio/estado se hace en la UI
+     * mediante la util pura [com.outime.app.presentation.util.evaluateScannedAppointment].
+     */
+    fun loadScannedAppointment(appointmentId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                error = null,
+                selectedAppointment = null,
+                scannedClientName = null
+            )
+
+            val result = appointmentRepository.getAppointmentById(appointmentId)
+
+            result.fold(
+                onSuccess = { appointment ->
+                    var scannedClientName: String? = null
+                    if (appointment?.clientId?.isNotBlank() == true) {
+                        scannedClientName = authRepository.getUserById(appointment.clientId)
+                            .getOrNull()
+                            ?.takeIf { it.name.isNotBlank() }
+                            ?.name
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        selectedAppointment = appointment,
+                        scannedClientName = scannedClientName
+                    )
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = error.message
+                    )
+                }
+            )
+        }
+    }
+
     fun updateAppointmentStatus(
         appointmentId: String,
         status: AppointmentStatus
