@@ -1,0 +1,214 @@
+@startuml
+
+' ============================================================
+' DIAGRAMA DE CLASES UML — OuTime
+' ============================================================
+
+left to right direction
+
+title Diagrama de Clases — OuTime
+
+' ============================================================
+' ESTILO — DESIGN SYSTEM OUTIME
+' ============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam dpi 150
+
+skinparam class {
+    BackgroundColor #F4F8F6
+    BorderColor #2F5D50
+    FontColor #20352F
+    FontSize 12
+    AttributeFontSize 10
+    BorderThickness 1.2
+}
+
+skinparam enum {
+    BackgroundColor #EDF4F1
+    BorderColor #2F5D50
+    FontColor #20352F
+    FontSize 11
+    AttributeFontSize 10
+    BorderThickness 1.2
+}
+
+skinparam package {
+    BackgroundColor #F8FBF9
+    BorderColor #8AA99F
+    FontColor #2F5D50
+    FontSize 12
+    FontStyle bold
+    BorderThickness 1
+}
+
+skinparam ArrowColor #5F766E
+skinparam ArrowThickness 1.1
+
+' ============================================================
+' CORE Y NEGOCIO
+' ============================================================
+
+package "Core & Negocio" {
+
+    class User {
+        id : String
+        name : String
+        email : String
+        role : UserRole
+        createdAt : Long
+    }
+
+    class Business {
+        id : String
+        ownerId : String
+        name : String
+        description : String
+        category : String
+    }
+
+    User -[hidden]right-> Business
+}
+
+' ============================================================
+' CONFIGURACIÓN DEL NEGOCIO
+' ============================================================
+
+package "Configuración del Negocio" {
+
+    class Service {
+        id : String
+        businessId : String
+        name : String
+        description : String
+        durationMinutes : Int
+        price : Double
+        isActive : Boolean
+    }
+
+    class BlockedDate {
+        id : String
+        businessId : String
+        date : Long
+        reason : String
+    }
+
+    class BusinessSchedule {
+        businessId : String
+        weeklyHours : Map<Int, DaySchedule>
+    }
+
+    class DaySchedule {
+        isOpen : Boolean
+        morningStart : String
+        morningEnd : String
+        afternoonStart : String
+        afternoonEnd : String
+    }
+}
+
+' ============================================================
+' GESTIÓN DE CITAS
+' ============================================================
+
+package "Gestión de Citas" {
+
+    class Appointment {
+        id : String
+        clientId : String
+        businessId : String
+        businessName : String
+        serviceId : String
+        serviceName : String
+        dateTime : Long
+        status : AppointmentStatus
+        createdAt : Long
+        servicePrice : Double
+    }
+}
+
+' ============================================================
+' ENUMERACIONES
+' ============================================================
+
+enum UserRole {
+    CLIENT
+    BUSINESS
+}
+
+enum AppointmentStatus {
+    PENDING
+    CONFIRMED
+    CANCELLED
+    COMPLETED
+}
+
+' ============================================================
+' RELACIONES DEL MODELO
+' ============================================================
+
+User "1" -- "0..1" Business : propietario
+
+Business "1" -- "0..*" Service : servicios
+
+Business "1" -- "0..*" Appointment : citas
+
+User "1" -- "0..*" Appointment : citas
+
+Service "1" -- "0..*" Appointment : citas
+
+Business "1" -- "0..1" BusinessSchedule : horario
+
+Business "1" -- "0..*" BlockedDate : fechas bloqueadas
+
+BusinessSchedule "1" *-- "0..7" DaySchedule : horas semanales
+
+' ============================================================
+' DEPENDENCIAS DE ENUMERACIONES
+' ============================================================
+
+User ..> UserRole : rol
+
+Appointment ..> AppointmentStatus : estado
+
+' ============================================================
+' ORGANIZACIÓN VISUAL
+' ============================================================
+
+' ------------------------------------------------------------
+' Núcleo
+' ------------------------------------------------------------
+
+User -[hidden]right-> Business
+
+' ------------------------------------------------------------
+' Configuración del negocio
+' ------------------------------------------------------------
+
+Service -[hidden]right-> BusinessSchedule
+BusinessSchedule -[hidden]right-> BlockedDate
+BusinessSchedule -[hidden]down-> DaySchedule
+
+' ------------------------------------------------------------
+' Gestión de citas
+' ------------------------------------------------------------
+
+Business -[hidden]right-> Appointment
+Appointment -[hidden]down-> AppointmentStatus
+
+' ------------------------------------------------------------
+' Posición de enumeraciones
+' ------------------------------------------------------------
+
+User -[hidden]up-> UserRole
+
+' ------------------------------------------------------------
+' Separación entre bloques
+' ------------------------------------------------------------
+
+Business -[hidden]down-> Service
+Service -[hidden]down-> Appointment
+
+@enduml

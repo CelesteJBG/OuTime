@@ -1,0 +1,142 @@
+@startuml
+left to right direction
+title Diagrama de Casos de Uso - OuTime
+
+scale 0.7
+skinparam nodesep 25
+skinparam ranksep 30
+
+' ============================================================
+' ESTILO
+' ============================================================
+<style>
+actor {
+  BackgroundColor #FFFFFF
+  LineColor #2F5D50
+  FontColor #2F5D50
+  FontSize 10
+  FontStyle bold
+}
+usecase {
+  BackgroundColor #FFFFFF
+  LineColor #2F5D50
+  FontColor #2F5D50
+  FontSize 9
+  RoundCorner 12
+  Shadowing 0
+}
+package {
+  BackgroundColor #F3F7F5
+  LineColor #2F5D50
+  FontColor #2F5D50
+  FontSize 10
+  FontStyle bold
+}
+arrow {
+  LineColor #8BA69E
+  LineThickness 1
+}
+rectangle {
+  BackgroundColor #F3F7F5
+  LineColor #2F5D50
+  FontColor #2F5D50
+  LineThickness 1.5
+  RoundCorner 8
+}
+</style>
+
+' ============================================================
+' ACTORES
+' ============================================================
+actor "Cliente" as Cliente
+actor "Negocio" as Negocio
+actor "Google Code Scanner" as Scanner
+
+' ============================================================
+' SISTEMA
+' ============================================================
+rectangle "OuTime" {
+
+  package "Autenticación" {
+    usecase "Registrarse" as UC_Registro
+    usecase "Iniciar sesión" as UC_Login
+    usecase "Recuperar contraseña" as UC_Password
+    usecase "Cerrar sesión" as UC_Logout
+  }
+
+  package "Funcionalidades del cliente" {
+    usecase "Explorar negocios" as UC_Explorar
+    usecase "Consultar detalle\nde negocio" as UC_Detalle
+    usecase "Reservar cita" as UC_Reservar
+    usecase "Consultar citas" as UC_CitasCliente
+    usecase "Cancelar cita" as UC_CancelarCliente
+    usecase "Mostrar QR\nde cita" as UC_MostrarQR
+    usecase "Gestionar perfil" as UC_PerfilCliente
+  }
+
+  package "Funcionalidades del negocio" {
+    usecase "Crear negocio" as UC_CrearNegocio
+    usecase "Gestionar perfil" as UC_PerfilNegocio
+    usecase "Gestionar servicios" as UC_Servicios
+    usecase "Gestionar horario\nsemanal" as UC_Horario
+    usecase "Gestionar fechas\nbloqueadas" as UC_Bloqueos
+    usecase "Consultar citas" as UC_CitasNegocio
+    usecase "Cancelar cita" as UC_CancelarNegocio
+    usecase "Completar cita" as UC_Completar
+    usecase "Consultar\nestadísticas" as UC_Estadisticas
+  }
+
+  package "Validación de citas" {
+    usecase "Validar cita\nmediante QR" as UC_ValidarQR
+    usecase "Escanear\ncódigo QR" as UC_EscanearQR
+  }
+}
+
+' ============================================================
+' CONEXIONES CLIENTE
+' ============================================================
+Cliente --> UC_Registro
+Cliente --> UC_Login
+Cliente --> UC_Password
+Cliente --> UC_Logout
+
+Cliente --> UC_Explorar
+Cliente --> UC_CitasCliente
+Cliente --> UC_PerfilCliente
+
+' ============================================================
+' CONEXIONES NEGOCIO
+' ============================================================
+Negocio --> UC_Registro
+Negocio --> UC_Login
+Negocio --> UC_Password
+Negocio --> UC_Logout
+
+Negocio --> UC_CrearNegocio
+Negocio --> UC_PerfilNegocio
+Negocio --> UC_Servicios
+Negocio --> UC_Horario
+Negocio --> UC_Bloqueos
+Negocio --> UC_CitasNegocio
+Negocio --> UC_Estadisticas
+Negocio --> UC_ValidarQR
+
+' ============================================================
+' RELACIONES INTERNAS DE CASOS DE USO
+' ============================================================
+UC_Reservar .right.> UC_Detalle : <<extend>>
+UC_CancelarCliente .right.> UC_CitasCliente : <<extend>>
+UC_MostrarQR .right.> UC_CitasCliente : <<extend>>
+
+UC_CancelarNegocio .right.> UC_CitasNegocio : <<extend>>
+UC_Completar .right.> UC_CitasNegocio : <<extend>>
+
+UC_ValidarQR ..> UC_Completar : <<extend>>
+UC_ValidarQR ..> UC_EscanearQR : <<include>>
+
+' ============================================================
+' ACTOR EXTERNO
+' ============================================================
+Scanner --> UC_EscanearQR
+
+@enduml

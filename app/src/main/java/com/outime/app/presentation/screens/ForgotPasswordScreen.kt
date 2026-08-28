@@ -210,7 +210,7 @@ fun ForgotPasswordScreen(
                             email = it
                             localError = null
                         },
-                        label = { Text("Email") },
+                        label = { Text("Correo electrónico") },
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = {
                             Icon(

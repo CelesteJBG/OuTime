@@ -17,11 +17,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.outime.app.R
+import com.outime.app.data.local.OnboardingPersistence
 import com.outime.app.presentation.navigation.Routes
 import com.outime.app.presentation.navigation.resolvePostLoginDestination
 import com.outime.app.presentation.viewmodel.AuthViewModel
@@ -35,8 +37,11 @@ fun SplashScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToClientHome: () -> Unit,
     onNavigateToBusinessHome: () -> Unit,
-    onNavigateToCreateBusiness: () -> Unit
+    onNavigateToCreateBusiness: () -> Unit,
+    onNavigateToOnboarding: () -> Unit
 ) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -52,8 +57,6 @@ fun SplashScreen(
             modifier = Modifier.size(220.dp),
             contentScale = ContentScale.Fit
         )
-
-        //Spacer(modifier = Modifier.height(6.dp))
 
         // ── Subtítulo ──
         Text(
@@ -77,6 +80,12 @@ fun SplashScreen(
     LaunchedEffect(Unit) {
 
         delay(1500)
+
+        // ── Onboarding check ──
+        if (OnboardingPersistence.shouldShowOnboarding(context)) {
+            onNavigateToOnboarding()
+            return@LaunchedEffect
+        }
 
         val destination = resolvePostLoginDestination(authViewModel, businessViewModel)
 

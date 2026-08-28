@@ -1,11 +1,15 @@
 package com.outime.app.presentation.navigation
 
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -44,6 +48,8 @@ import com.outime.app.presentation.screens.RegisterScreen
 import com.outime.app.presentation.screens.ScheduleManagementScreen
 import com.outime.app.presentation.screens.SplashScreen
 import com.outime.app.presentation.screens.ForgotPasswordScreen
+import com.outime.app.presentation.screens.OnboardingScreen
+
 import com.outime.app.presentation.viewmodel.AppointmentViewModel
 import com.outime.app.presentation.viewmodel.AppointmentViewModelFactory
 import com.outime.app.presentation.viewmodel.AuthViewModel
@@ -119,9 +125,19 @@ fun AppNavGraph() {
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
 
+    // settledRoute se actualiza un ciclo de composición después que currentRoute,
+    // sincronizando así el BottomNavigation con el contenido visual real del NavHost.
+    var settledRoute by remember { mutableStateOf(currentRoute) }
+    LaunchedEffect(currentRoute) {
+        settledRoute = currentRoute
+    }
+
     // Determine if bottom bar should be visible and which items to show
-    val isBusinessMain = currentRoute in businessMainRoutes
-    val isClientMain = currentRoute in clientMainRoutes
+    // showBottomBar se basa en settledRoute, no en currentRoute, para evitar
+    // que el BottomNavigation aparezca antes de que el NavHost haya procesado
+    // la transición visual al nuevo destino.
+    val isBusinessMain = settledRoute in businessMainRoutes
+    val isClientMain = settledRoute in clientMainRoutes
     val showBottomBar = isBusinessMain || isClientMain
 
     val navItems = when {
@@ -193,6 +209,31 @@ fun AppNavGraph() {
                         navController.navigate(Routes.CREATE_BUSINESS) {
                             popUpTo(Routes.SPLASH) { inclusive = true }
                         }
+                    },
+
+                    onNavigateToOnboarding = {
+                        navController.navigate(Routes.ONBOARDING) {
+                            popUpTo(Routes.SPLASH) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            // ── Onboarding ──────────────────────────────────────────
+            composable(
+                route = Routes.ONBOARDING,
+                exitTransition = { null },
+                popEnterTransition = { null },
+                popExitTransition = { null }
+            ) {
+                OnboardingScreen(
+                    onCompleted = {
+                        scope.launch {
+                            val destination = resolvePostLoginDestination(authViewModel, businessViewModel)
+                            navController.navigate(destination) {
+                                popUpTo(Routes.ONBOARDING) { inclusive = true }
+                            }
+                        }
                     }
                 )
             }
@@ -254,7 +295,16 @@ fun AppNavGraph() {
 
             // ── CLIENT main routes ───────────────────────────────────
 
-            composable(Routes.CLIENT_HOME) {
+            composable(
+                route = Routes.CLIENT_HOME,
+                enterTransition = {
+                    if (initialState.destination.route in setOf(
+                            Routes.SPLASH, Routes.ONBOARDING, Routes.LOGIN, Routes.REGISTER
+                        )
+                    ) null
+                    else fadeIn()
+                }
+            ) {
                 ClientHomeScreen(
                     businessCatalogViewModel = businessCatalogViewModel,
                     authViewModel = authViewModel,
@@ -300,7 +350,16 @@ fun AppNavGraph() {
 
             // ── BUSINESS main routes ────────────────────────────────
 
-            composable(Routes.BUSINESS_HOME) {
+            composable(
+                route = Routes.BUSINESS_HOME,
+                enterTransition = {
+                    if (initialState.destination.route in setOf(
+                            Routes.SPLASH, Routes.ONBOARDING, Routes.LOGIN, Routes.REGISTER
+                        )
+                    ) null
+                    else fadeIn()
+                }
+            ) {
 
                 BusinessHomeScreen(
                     serviceViewModel = serviceViewModel,

@@ -88,7 +88,6 @@ fun BusinessDiscoveryCard(
                 }
             }
 
-            // Contenido textual
             Row(
                 modifier = Modifier
                     .weight(1f)
@@ -100,7 +99,7 @@ fun BusinessDiscoveryCard(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.Center
                 ) {
-                    // Nombre del negocio
+
                     Text(
                         text = business.name,
                         style = MaterialTheme.typography.titleMedium,
@@ -112,7 +111,6 @@ fun BusinessDiscoveryCard(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Categoría en chip sutil
                     if (business.category.isNotBlank()) {
                         Surface(
                             shape = MaterialTheme.shapes.small,
@@ -128,7 +126,6 @@ fun BusinessDiscoveryCard(
                         }
                     }
 
-                    // Descripción
                     if (business.description.isNotBlank()) {
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
@@ -141,7 +138,6 @@ fun BusinessDiscoveryCard(
                     }
                 }
 
-                // Chevron indicando navegabilidad
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = "Ver ${business.name}",

@@ -556,7 +556,3 @@ private fun Revenue7DaysChart(days: List<DailyRevenue>) {
         }
     }
 }
-
-
-
-

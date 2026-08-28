@@ -80,7 +80,7 @@ fun LoginScreen(
     LaunchedEffect(uiState.error) {
         uiState.error?.let { errorMsg ->
             scope.launch {
-                snackbarHostState.showSnackbar("No se pudo iniciar sesión. Email o contraseña incorrectos")
+                snackbarHostState.showSnackbar("No se pudo iniciar sesión. Correo electrónico o contraseña incorrectos")
             }
             authViewModel.resetState()
         }
@@ -139,7 +139,7 @@ fun LoginScreen(
                         email = it
                         emailError = null
                     },
-                    label = { Text("Email") },
+                    label = { Text("Correo electrónico") },
                     modifier = Modifier.fillMaxWidth(),
                     leadingIcon = {
                         Icon(

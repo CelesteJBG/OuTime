@@ -1,0 +1,135 @@
+@startuml
+
+' ============================================================
+' DIAGRAMA ENTIDAD–RELACIÓN — OuTime
+' V4 — Ajuste visual definitivo
+' ============================================================
+
+left to right direction
+
+title Diagrama ER — OuTime
+
+' ============================================================
+' ESTILO — DESIGN SYSTEM OUTIME
+' ============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam dpi 150
+
+skinparam nodesep 55
+skinparam ranksep 65
+
+skinparam entity {
+    BackgroundColor #F4F8F6
+    BorderColor #2F5D50
+    FontColor #20352F
+    FontSize 11
+    AttributeFontSize 10
+    BorderThickness 1.2
+}
+
+skinparam ArrowColor #5F766E
+skinparam ArrowThickness 1.1
+
+' ============================================================
+' ENTIDADES
+' ============================================================
+
+entity "USERS" as USERS {
+    * id : String <<PK>>
+    --
+    name : String
+    email : String
+    role : UserRole
+    createdAt : Long
+}
+
+entity "BUSINESSES" as BUSINESSES {
+    * id : String <<PK>>
+    --
+    ownerId : String <<FK>>
+    name : String
+    description : String
+    category : String
+}
+
+entity "SERVICES" as SERVICES {
+    * id : String <<PK>>
+    --
+    businessId : String <<FK>>
+    name : String
+    description : String
+    durationMinutes : Int
+    price : Double
+    isActive : Boolean
+}
+
+entity "APPOINTMENTS" as APPOINTMENTS {
+    * id : String <<PK>>
+    --
+    clientId : String <<FK>>
+    businessId : String <<FK>>
+    businessName : String <<SNAPSHOT>>
+    serviceId : String <<FK>>
+    serviceName : String <<SNAPSHOT>>
+    dateTime : Long
+    status : AppointmentStatus
+    createdAt : Long
+    servicePrice : Double <<SNAPSHOT>>
+}
+
+entity "BUSINESS_SCHEDULES" as SCHEDULES {
+    * businessId : String <<PK>>
+    --
+    weeklyHours : Map<Int, DaySchedule>
+}
+
+entity "BLOCKED_DATES" as BLOCKED {
+    * id : String <<PK>>
+    --
+    businessId : String <<FK>>
+    date : Long
+    reason : String
+}
+
+
+' ============================================================
+' RELACIONES
+' ============================================================
+
+USERS ||--o{ BUSINESSES : "propietario"
+
+BUSINESSES ||--o{ SERVICES : "ofrece"
+
+BUSINESSES ||--o{ APPOINTMENTS : "recibe"
+
+USERS ||--o{ APPOINTMENTS : "realiza"
+
+SERVICES ||--o{ APPOINTMENTS : "corresponde"
+
+BUSINESSES ||--o| SCHEDULES : "configura"
+
+BUSINESSES ||--o{ BLOCKED : "registra"
+
+
+' ============================================================
+' ORGANIZACIÓN VISUAL
+' ============================================================
+
+' Núcleo principal
+USERS -[hidden]right-> BUSINESSES
+BUSINESSES -[hidden]right-> SERVICES
+
+' Separación entre núcleo y citas
+BUSINESSES -[hidden]down-> APPOINTMENTS
+SERVICES -[hidden]down-> APPOINTMENTS
+
+' Configuración del negocio
+BUSINESSES -[hidden]down-> SCHEDULES
+SCHEDULES -[hidden]right-> BLOCKED
+
+' Separación vertical adicional
+APPOINTMENTS -[hidden]down-> BLOCKED
+
+@enduml

@@ -134,10 +134,6 @@ class ScheduleRepositoryImpl(
         Result.failure(e)
     }
 
-    /**
-     * Convierte el mapa crudo de un documento de "business_schedules" a un [BusinessSchedule].
-     * Firestore no soporta Map<Int, *>: usamos String como clave puente.
-     */
     private fun mapToSchedule(businessId: String, raw: Map<String, Any>): BusinessSchedule {
         @Suppress("UNCHECKED_CAST")
         val rawWeekly = raw["weeklyHours"] as? Map<String, Any> ?: emptyMap()

@@ -1,12 +1,11 @@
-package com.outime.app
+package com.outime.app.presentation.util
 
 import com.outime.app.domain.model.Appointment
 import com.outime.app.domain.model.AppointmentStatus
 import com.outime.app.domain.model.Service
 import com.outime.app.presentation.viewmodel.StatPeriod
 import com.outime.app.presentation.viewmodel.computeStatistics
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert
 import org.junit.Test
 import java.util.Calendar
 
@@ -67,7 +66,7 @@ class StatisticsCalculatorTest {
 
         val stats = computeStatistics(appointments, services, StatPeriod.ALL, REFERENCE)
 
-        assertEquals(35.0, stats.revenue, 0.0001)
+        Assert.assertEquals(35.0, stats.revenue, 0.0001)
     }
 
     @Test
@@ -77,7 +76,7 @@ class StatisticsCalculatorTest {
             appt(AppointmentStatus.CANCELLED, servicePrice = 99.0)
         )
         val stats = computeStatistics(appointments, emptyList(), StatPeriod.ALL, REFERENCE)
-        assertEquals(0.0, stats.revenue, 0.0001)
+        Assert.assertEquals(0.0, stats.revenue, 0.0001)
     }
 
     // ── Citas completadas ─────────────────────────────────────
@@ -90,7 +89,7 @@ class StatisticsCalculatorTest {
             appt(AppointmentStatus.CANCELLED)
         )
         val stats = computeStatistics(appointments, emptyList(), StatPeriod.ALL, REFERENCE)
-        assertEquals(2, stats.completedCount)
+        Assert.assertEquals(2, stats.completedCount)
     }
 
     // ── Clientes únicos atendidos ─────────────────────────────
@@ -103,7 +102,7 @@ class StatisticsCalculatorTest {
             appt(AppointmentStatus.CONFIRMED, clientId = "clienteC")  // no atendido
         )
         val stats = computeStatistics(appointments, emptyList(), StatPeriod.ALL, REFERENCE)
-        assertEquals(2, stats.uniqueClientsServed)
+        Assert.assertEquals(2, stats.uniqueClientsServed)
     }
 
     // ── Tasa de cancelación ───────────────────────────────────
@@ -116,13 +115,13 @@ class StatisticsCalculatorTest {
             appt(AppointmentStatus.CONFIRMED)
         )
         val stats = computeStatistics(appointments, emptyList(), StatPeriod.ALL, REFERENCE)
-        assertEquals(25.0, stats.cancellationRate, 0.0001)
+        Assert.assertEquals(25.0, stats.cancellationRate, 0.0001)
     }
 
     @Test
     fun `tasa de cancelacion es 0 sin citas sin division por cero`() {
         val stats = computeStatistics(emptyList(), emptyList(), StatPeriod.ALL, REFERENCE)
-        assertEquals(0.0, stats.cancellationRate, 0.0001)
+        Assert.assertEquals(0.0, stats.cancellationRate, 0.0001)
     }
 
     // ── Top 3 servicios ───────────────────────────────────────
@@ -147,11 +146,11 @@ class StatisticsCalculatorTest {
 
         val stats = computeStatistics(appointments, services, StatPeriod.ALL, REFERENCE)
 
-        assertEquals(3, stats.topServices.size)
-        assertEquals("Corte", stats.topServices[0].name)
-        assertEquals(3, stats.topServices[0].count)
+        Assert.assertEquals(3, stats.topServices.size)
+        Assert.assertEquals("Corte", stats.topServices[0].name)
+        Assert.assertEquals(3, stats.topServices[0].count)
         // El servicio inactivo (s1 "Corte") sigue apareciendo en el histórico.
-        assertTrue(stats.topServices.any { it.name == "Corte" })
+        Assert.assertTrue(stats.topServices.any { it.name == "Corte" })
     }
 
     // ── Periodos (dateTime, no createdAt) ─────────────────────
@@ -164,8 +163,8 @@ class StatisticsCalculatorTest {
             appt(AppointmentStatus.COMPLETED, dateTime = previousDay, servicePrice = 99.0)
         )
         val stats = computeStatistics(appointments, emptyList(), StatPeriod.TODAY, REFERENCE)
-        assertEquals(1, stats.totalAppointments)
-        assertEquals(10.0, stats.revenue, 0.0001)
+        Assert.assertEquals(1, stats.totalAppointments)
+        Assert.assertEquals(10.0, stats.revenue, 0.0001)
     }
 
     @Test
@@ -177,8 +176,8 @@ class StatisticsCalculatorTest {
             appt(AppointmentStatus.COMPLETED, dateTime = previousMonth, servicePrice = 99.0)
         )
         val stats = computeStatistics(appointments, emptyList(), StatPeriod.MONTH, REFERENCE)
-        assertEquals(1, stats.totalAppointments)
-        assertEquals(5.0, stats.revenue, 0.0001)
+        Assert.assertEquals(1, stats.totalAppointments)
+        Assert.assertEquals(5.0, stats.revenue, 0.0001)
     }
 
     @Test
@@ -191,8 +190,8 @@ class StatisticsCalculatorTest {
             appt(AppointmentStatus.COMPLETED, dateTime = beforeWeek, servicePrice = 99.0)
         )
         val stats = computeStatistics(appointments, emptyList(), StatPeriod.WEEK, REFERENCE)
-        assertEquals(1, stats.totalAppointments)
-        assertEquals(7.0, stats.revenue, 0.0001)
+        Assert.assertEquals(1, stats.totalAppointments)
+        Assert.assertEquals(7.0, stats.revenue, 0.0001)
     }
 
     @Test
@@ -202,8 +201,8 @@ class StatisticsCalculatorTest {
             appt(AppointmentStatus.COMPLETED, dateTime = at(2023, Calendar.JANUARY, 1, 9), servicePrice = 4.0)
         )
         val stats = computeStatistics(appointments, emptyList(), StatPeriod.ALL, REFERENCE)
-        assertEquals(2, stats.totalAppointments)
-        assertEquals(7.0, stats.revenue, 0.0001)
+        Assert.assertEquals(2, stats.totalAppointments)
+        Assert.assertEquals(7.0, stats.revenue, 0.0001)
     }
 
     // ── Snapshot histórico del precio (crítico) ───────────────
@@ -217,7 +216,7 @@ class StatisticsCalculatorTest {
         val stats = computeStatistics(listOf(appointment), services, StatPeriod.ALL, REFERENCE)
 
         // El ingreso debe usar 15 € (snapshot), NO 20 €.
-        assertEquals(15.0, stats.revenue, 0.0001)
+        Assert.assertEquals(15.0, stats.revenue, 0.0001)
     }
 
     @Test
@@ -228,19 +227,19 @@ class StatisticsCalculatorTest {
 
         val stats = computeStatistics(listOf(appointment), services, StatPeriod.ALL, REFERENCE)
 
-        assertEquals(20.0, stats.revenue, 0.0001)
+        Assert.assertEquals(20.0, stats.revenue, 0.0001)
     }
 
     // ── Ausencia total de datos ───────────────────────────────
     @Test
     fun `sin datos devuelve ceros y ultimos 7 dias en cero`() {
         val stats = computeStatistics(emptyList(), emptyList(), StatPeriod.ALL, REFERENCE)
-        assertEquals(0.0, stats.revenue, 0.0001)
-        assertEquals(0, stats.completedCount)
-        assertEquals(0, stats.uniqueClientsServed)
-        assertEquals(0.0, stats.cancellationRate, 0.0001)
-        assertEquals(0, stats.topServices.size)
-        assertEquals(7, stats.last7DaysRevenue.size)
-        assertTrue(stats.last7DaysRevenue.all { it.revenue == 0.0 })
+        Assert.assertEquals(0.0, stats.revenue, 0.0001)
+        Assert.assertEquals(0, stats.completedCount)
+        Assert.assertEquals(0, stats.uniqueClientsServed)
+        Assert.assertEquals(0.0, stats.cancellationRate, 0.0001)
+        Assert.assertEquals(0, stats.topServices.size)
+        Assert.assertEquals(7, stats.last7DaysRevenue.size)
+        Assert.assertTrue(stats.last7DaysRevenue.all { it.revenue == 0.0 })
     }
 }

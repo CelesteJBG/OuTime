@@ -1,0 +1,218 @@
+@startuml
+
+' ============================================================
+' DIAGRAMA DE ARQUITECTURA — OuTime
+' V3 — Composición por capas
+' ============================================================
+
+left to right direction
+
+title Diagrama de Arquitectura — OuTime
+
+' ============================================================
+' ESTILO — DESIGN SYSTEM OUTIME
+' ============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam dpi 150
+
+skinparam linetype ortho
+
+skinparam package {
+    BackgroundColor #F4F8F6
+    BorderColor #2F5D50
+    FontColor #2F5D50
+    FontSize 13
+    FontStyle bold
+    BorderThickness 1.3
+}
+
+skinparam component {
+    BackgroundColor #FFFFFF
+    BorderColor #2F5D50
+    FontColor #20352F
+    FontSize 10
+    AttributeFontSize 9
+    BorderThickness 1.1
+}
+
+skinparam database {
+    BackgroundColor #EDF4F1
+    BorderColor #2F5D50
+    FontColor #20352F
+    FontSize 10
+}
+
+skinparam ArrowColor #5F766E
+skinparam ArrowThickness 1.1
+
+
+' ============================================================
+' PRESENTACIÓN
+' ============================================================
+
+package "PRESENTACIÓN" as PRESENTACION {
+
+    package "UI · Jetpack Compose" as UI {
+
+        component "Pantallas de autenticación\nLogin · Registro · Recuperación" as UI_AUTH
+
+        component "Pantallas del cliente\nHome · Detalle · Reserva · Citas · Perfil" as UI_CLIENT
+
+        component "Pantallas del negocio\nHome · Citas · Servicios · Horario · Perfil · Estadísticas" as UI_BUSINESS
+    }
+
+    component "ViewModels\n\nAuth · Business · Appointment\nSchedule · Service · Statistics" as VIEWMODELS
+
+    component "AppNavGraph\n+\nViewModelFactory" as NAV
+}
+
+
+' ============================================================
+' SERVICIOS EXTERNOS
+' ============================================================
+
+package "SERVICIOS EXTERNOS" as EXTERNAL {
+
+    component "Google Code Scanner\n(ML Kit)" as SCANNER
+
+    component "ZXing\nGeneración de QR" as ZXING
+
+    database "Cloud Firestore" as FIRESTORE
+
+    component "Firebase Authentication" as FIREBASE_AUTH
+}
+
+
+' ============================================================
+' CAPA DE DATOS
+' ============================================================
+
+package "DATOS" as DATA {
+
+    component "Implementaciones de Repositorio\n\nAuthImpl · BusinessImpl\nServiceImpl · AppointmentImpl\nScheduleImpl" as REPO_IMPL
+
+    component "Firebase + Firestore" as DATA_SOURCE
+}
+
+
+' ============================================================
+' CAPA DE DOMINIO
+' ============================================================
+
+package "DOMINIO" as DOMAIN {
+
+    component "Interfaces de Repositorio\n\nAuth · Business · Service\nAppointment · Schedule" as REPO_INTERFACES
+
+    component "Modelos de Dominio\n\nUser · Business · Service\nAppointment · Schedule · BlockedDate" as MODELS
+}
+
+
+' ============================================================
+' RELACIONES — PRESENTACIÓN
+' ============================================================
+
+UI_AUTH --> VIEWMODELS : «interactúa»
+UI_CLIENT --> VIEWMODELS : «interactúa»
+UI_BUSINESS --> VIEWMODELS : «interactúa»
+
+NAV --> VIEWMODELS : «crea»
+
+
+' ============================================================
+' RELACIONES — PRESENTACIÓN → DOMINIO
+' ============================================================
+
+VIEWMODELS --> REPO_INTERFACES : «llama»
+
+REPO_INTERFACES --> MODELS : «utiliza»
+
+
+' ============================================================
+' RELACIONES — DOMINIO → DATOS
+' ============================================================
+
+REPO_IMPL ..|> REPO_INTERFACES : «implementa»
+
+
+' ============================================================
+' RELACIONES — DATOS → SERVICIOS EXTERNOS
+' ============================================================
+
+REPO_IMPL --> FIRESTORE : «persistencia»
+
+REPO_IMPL --> FIREBASE_AUTH : «autenticación»
+
+DATA_SOURCE --> FIRESTORE
+DATA_SOURCE --> FIREBASE_AUTH
+
+
+' ============================================================
+' RELACIONES — QR
+' ============================================================
+
+UI_CLIENT --> ZXING : «genera QR»
+
+UI_BUSINESS --> SCANNER : «escanea QR»
+
+SCANNER --> VIEWMODELS : «appointmentId»
+
+
+' ============================================================
+' COMPLETAR CITA SIN QR
+' ============================================================
+
+UI_BUSINESS ..> VIEWMODELS : «completar cita\nsin QR»
+
+
+' ============================================================
+' ORGANIZACIÓN VISUAL
+' ============================================================
+
+' ------------------------------------------------------------
+' PRESENTACIÓN
+' ------------------------------------------------------------
+
+UI_AUTH -[hidden]right-> UI_CLIENT
+UI_CLIENT -[hidden]right-> UI_BUSINESS
+
+UI -[hidden]right-> VIEWMODELS
+VIEWMODELS -[hidden]right-> NAV
+
+
+' ------------------------------------------------------------
+' SERVICIOS EXTERNOS
+' ------------------------------------------------------------
+
+SCANNER -[hidden]down-> ZXING
+ZXING -[hidden]down-> FIRESTORE
+FIRESTORE -[hidden]down-> FIREBASE_AUTH
+
+
+' ------------------------------------------------------------
+' DATOS
+' ------------------------------------------------------------
+
+REPO_IMPL -[hidden]right-> DATA_SOURCE
+
+
+' ------------------------------------------------------------
+' DOMINIO
+' ------------------------------------------------------------
+
+REPO_INTERFACES -[hidden]right-> MODELS
+
+
+' ------------------------------------------------------------
+' POSICIONAMIENTO GENERAL
+' ------------------------------------------------------------
+
+PRESENTACION -[hidden]down-> DATA
+PRESENTACION -[hidden]right-> EXTERNAL
+
+DATA -[hidden]right-> DOMAIN
+EXTERNAL -[hidden]down-> DOMAIN
+
+@enduml

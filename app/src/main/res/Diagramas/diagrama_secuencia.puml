@@ -1,0 +1,202 @@
+@startuml
+
+' ============================================================
+' DIAGRAMA DE SECUENCIA UML — OuTime
+' Flujo real: Reserva de una cita — V2
+' ============================================================
+
+title Diagrama de Secuencia — Reserva de una cita
+
+hide footbox
+
+' ============================================================
+' ESTILO — DESIGN SYSTEM OUTIME
+' ============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam dpi 150
+
+skinparam sequence {
+    ParticipantBackgroundColor #F4F8F6
+    ParticipantBorderColor #2F5D50
+    ParticipantFontColor #20352F
+    ParticipantFontSize 12
+
+    ActorBackgroundColor #EDF4F1
+    ActorBorderColor #2F5D50
+    ActorFontColor #20352F
+    ActorFontSize 12
+
+    LifeLineBackgroundColor #F8FBF9
+    LifeLineBorderColor #8AA69C
+
+    ArrowColor #5F766E
+    ArrowThickness 1.1
+
+    MessageFontColor #20352F
+    MessageFontSize 11
+
+    GroupBackgroundColor #F4F8F6
+    GroupBorderColor #2F5D50
+    GroupFontColor #2F5D50
+    GroupFontSize 12
+
+    DividerBackgroundColor #EDF4F1
+    DividerBorderColor #2F5D50
+    DividerFontColor #2F5D50
+    DividerFontSize 12
+}
+
+skinparam note {
+    BackgroundColor #EDF4F1
+    BorderColor #8AA69C
+    FontColor #20352F
+    FontSize 10
+}
+
+' ============================================================
+' PARTICIPANTES
+' ============================================================
+
+actor "Cliente" as Cliente
+
+participant "BookingScreen" as BookingScreen
+participant "ScheduleViewModel" as ScheduleVM
+participant "ScheduleRepositoryImpl" as ScheduleRepo
+participant "AppointmentViewModel" as AppointmentVM
+participant "AppointmentRepositoryImpl" as AppointmentRepo
+database "Firestore" as Firestore
+
+
+' ============================================================
+' FASE 1 — CARGA DE DISPONIBILIDAD
+' ============================================================
+
+== Preparación de disponibilidad ==
+
+BookingScreen -> ScheduleVM : Observar horario del negocio
+
+ScheduleVM -> ScheduleRepo : observeSchedule(businessId)
+
+ScheduleRepo -> Firestore : Escuchar business_schedules/{businessId}
+Firestore --> ScheduleRepo : Datos del horario
+ScheduleRepo --> ScheduleVM : Horario actualizado
+ScheduleVM --> BookingScreen : Actualizar estado del horario
+
+
+BookingScreen -> ScheduleVM : Observar fechas bloqueadas
+
+ScheduleVM -> ScheduleRepo : observeBlockedDates(businessId)
+
+ScheduleRepo -> Firestore : Escuchar blocked_dates
+Firestore --> ScheduleRepo : Fechas bloqueadas
+ScheduleRepo --> ScheduleVM : Fechas actualizadas
+ScheduleVM --> BookingScreen : Actualizar estado
+
+
+' ============================================================
+' FASE 2 — CONSULTA DE DISPONIBILIDAD
+' ============================================================
+
+== Consulta de disponibilidad ==
+
+Cliente -> BookingScreen : Seleccionar fecha
+
+BookingScreen -> AppointmentVM : loadAppointmentsByBusinessAndDate(...)
+
+AppointmentVM -> AppointmentRepo : getAppointmentsByBusinessAndDate(...)
+
+AppointmentRepo -> Firestore : Consultar appointments\npor negocio y rango de fecha
+Firestore --> AppointmentRepo : Citas del día
+
+AppointmentRepo --> AppointmentVM : Lista de citas
+AppointmentVM --> BookingScreen : Actualizar citas del día
+
+BookingScreen -> ScheduleVM : generateTimeSlots(...)
+
+ScheduleVM -> ScheduleVM : Generar franjas disponibles
+
+note right of ScheduleVM
+Se consideran:
+- horario del negocio
+- fechas bloqueadas
+- franjas pasadas
+- citas existentes
+end note
+
+ScheduleVM --> BookingScreen : TimeSlot disponibles / ocupados
+
+
+' ============================================================
+' FASE 3 — CONFIRMACIÓN
+' ============================================================
+
+== Confirmación de la cita ==
+
+Cliente -> BookingScreen : Pulsar "Confirmar cita"
+
+BookingScreen -> BookingScreen : isBookingDateStillAvailable()
+
+alt Fecha no disponible
+
+    BookingScreen --> Cliente : Mostrar Snackbar\n"El día ya no está disponible"
+
+else Fecha disponible
+
+    BookingScreen -> AppointmentVM : createAppointment(appointment)
+
+    AppointmentVM -> AppointmentVM : Crear Appointment\nstatus = CONFIRMED
+
+    AppointmentVM -> AppointmentRepo : createAppointment(appointment)
+
+    AppointmentRepo -> Firestore : document().set(appointment)
+
+    alt Escritura correcta
+
+        Firestore --> AppointmentRepo : Escritura completada
+        AppointmentRepo --> AppointmentVM : Result.success(Unit)
+        AppointmentVM --> BookingScreen : isSuccess = true
+
+        BookingScreen -> BookingScreen : Mostrar Snackbar\n"Cita confirmada"
+
+        BookingScreen -> AppointmentVM : resetState()
+
+        BookingScreen -> AppointmentVM : loadAppointmentsByBusinessAndDate(...)
+
+        AppointmentVM -> AppointmentRepo : getAppointmentsByBusinessAndDate(...)
+
+        AppointmentRepo -> Firestore : Consultar citas actualizadas
+        Firestore --> AppointmentRepo : Lista actualizada
+        AppointmentRepo --> AppointmentVM : Lista de citas
+        AppointmentVM --> BookingScreen : Actualizar franjas
+
+    else Error en Firestore
+
+        Firestore --> AppointmentRepo : Excepción
+        AppointmentRepo --> AppointmentVM : Result.failure(e)
+        AppointmentVM --> BookingScreen : error = e.message
+
+        BookingScreen -> BookingScreen : Mostrar Snackbar\n"Error: {mensaje}"
+
+        BookingScreen -> AppointmentVM : resetState()
+
+        BookingScreen --> Cliente : Permanecer en la pantalla\nsin crear la cita
+
+    end
+
+end
+
+
+' ============================================================
+' NOTA SOBRE EL FLUJO
+' ============================================================
+
+note over BookingScreen,AppointmentRepo
+La disponibilidad se valida previamente en la interfaz.
+La creación de la cita se realiza mediante una escritura
+directa en Firestore.
+end note
+
+@enduml
