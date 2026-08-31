@@ -102,7 +102,7 @@ fun OnboardingScreen(
         // -------------------------------------------------------------
         // TOP / SALTAR
         // -------------------------------------------------------------
-        Spacer(modifier = Modifier.height(60.dp)) //20
+        Spacer(modifier = Modifier.height(20.dp)) //20
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -247,7 +247,7 @@ fun OnboardingScreen(
         // SPACE BEFORE BUTTON
         // -------------------------------------------------------------
 
-        Spacer(modifier = Modifier.height(100.dp)) //40
+        Spacer(modifier = Modifier.height(40.dp)) //40
 
         // -------------------------------------------------------------
         // CTA
